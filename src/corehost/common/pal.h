@@ -54,6 +54,10 @@
 #if defined(_WIN32)
 #define LIB_PREFIX
 #define MAKE_LIBNAME(NAME) (_X(NAME) _X(".dll"))
+
+#define RT_EMBED MAKEINTRESOURCEW(100)
+#define RT_EMBED_MANIFEST MAKEINTRESOURCEW(101)
+
 #elif defined(__APPLE__)
 #define LIB_PREFIX _X("lib")
 #define MAKE_LIBNAME(NAME) (LIB_PREFIX _X(NAME) _X(".dylib"))
@@ -76,7 +80,6 @@
 #define PATH_MAX    4096
 #endif
 
-
 namespace pal
 {
 #if defined(_WIN32)
@@ -91,6 +94,7 @@ namespace pal
     typedef wchar_t char_t;
     typedef std::wstring string_t;
     typedef std::wstringstream stringstream_t;
+    typedef std::wstring::iterator string_iterator_t;
     // TODO: Agree on the correct encoding of the files: The PoR for now is to
     // temporarily wchar for Windows and char for Unix. Current implementation
     // implicitly expects the contents on both Windows and Unix as char and
@@ -101,6 +105,7 @@ namespace pal
     typedef HRESULT hresult_t;
     typedef HMODULE dll_t;
     typedef FARPROC proc_t;
+    typedef HANDLE  file_t;
 
     inline string_t exe_suffix() { return _X(".exe"); }
     inline bool need_api_sets() { return true; }
@@ -148,11 +153,13 @@ namespace pal
     typedef char char_t;
     typedef std::string string_t;
     typedef std::stringstream stringstream_t;
+    typedef std::string::iterator string_iterator_t;
     typedef std::basic_ifstream<char> ifstream_t;
     typedef std::istreambuf_iterator<ifstream_t::char_type> istreambuf_iterator_t;
     typedef int hresult_t;
     typedef void* dll_t;
     typedef void* proc_t;
+    typedef void* file_t;
 
     inline string_t exe_suffix() { return _X(""); }
     inline bool need_api_sets() { return false; }
@@ -197,6 +204,19 @@ namespace pal
     void readdir(const string_t& path, const string_t& pattern, std::vector<pal::string_t>* list);
     void readdir(const string_t& path, std::vector<pal::string_t>* list);
 
+    enum FilePermissions
+    {
+        File_None =    0x0,
+        File_Read =    0x1, 
+        File_Write =   0x2,
+        File_Execute = 0x4
+    };
+
+    bool create_directory(const pal::char_t *path);
+    bool create_file(const pal::char_t *path, int permissions, bool overwrite, pal::file_t *file);
+    bool write_file(const pal::file_t file, void* buffer, size_t numBytes);
+    bool close_file(const pal::file_t file);
+
     bool get_own_executable_path(string_t* recv);
     bool getenv(const char_t* name, string_t* recv);
     bool get_default_servicing_directory(string_t* recv);
@@ -209,7 +229,12 @@ namespace pal
 
     bool load_library(const char_t* path, dll_t* dll);
     proc_t get_symbol(dll_t library, const char* name);
+    bool get_own_library(dll_t* dll);
     void unload_library(dll_t library);
+
+    bool open_resource(pal::dll_t bundle, const pal::char_t *type, const pal::char_t *ID, void **buffer, size_t *size);
+    bool enumerate_resources(pal::dll_t bundle, const pal::char_t *type, bool(*callback)(pal::dll_t, const pal::char_t *, const pal::char_t *, void *), void *passThroughParam);
+    bool get_temp_path(pal::char_t *path);
 }
 
 #endif // PAL_H

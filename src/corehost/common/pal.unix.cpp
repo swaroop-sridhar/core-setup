@@ -77,6 +77,12 @@ bool pal::load_library(const char_t* path, dll_t* dll)
     return true;
 }
 
+bool pal::get_own_library(dll_t* dll)
+{
+    trace::error(_X("get_own_library: NYI"));
+    return false;
+}
+
 pal::proc_t pal::get_symbol(dll_t library, const char* name)
 {
     auto result = dlsym(library, name);
@@ -414,4 +420,46 @@ void pal::readdir(const string_t& path, const string_t& pattern, std::vector<pal
 void pal::readdir(const pal::string_t& path, std::vector<pal::string_t>* list)
 {
     readdir(path, _X("*"), list);
+}
+
+bool pal::open_resource(dll_t bundle, const wchar_t *type, const wchar_t *ID, void **buffer, size_t *size)
+{
+    trace::error(_X("NYI"));
+    return false;
+}
+
+bool enumerate_resources(pal::dll_t bundle, const pal::char_t *type, bool(*callback)(pal::dll_t, const pal::char_t *, const pal::char_t *, void *), void *passThroughParam)
+{
+    trace::error(_X("NYI"));
+    return false;
+}
+
+bool pal::get_temp_path(char_t *path)
+{
+    trace::error(_X("NYI"));
+    return false;
+}
+
+bool pal::create_directory(const pal::char_t *path)
+{
+    trace::error(_X("NYI"));
+    return false;
+}
+
+bool create_file(const pal::char_t *path, int permissions, bool overwrite, pal::file_t *file)
+{
+    trace::error(_X("NYI"));
+    return false;
+}
+
+bool pal::write_file(const pal::file_t file, void *buffer, size_t numBytes)
+{
+    trace::error(_X("NYI"));
+    return false;
+}
+
+bool pal::close_file(const pal::file_t file)
+{
+    trace::error(_X("NYI"));
+    return false;
 }

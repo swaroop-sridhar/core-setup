@@ -137,6 +137,133 @@ pal::string_t resolve_fxr_path(const pal::string_t& own_dir)
 #endif
 }
 
+#if FEATURE_APPHOST
+class BundleExtractor
+{
+public:
+    BundleExtractor()
+        :m_bundle(NULL)
+    {
+    }
+
+private:
+    static bool SpillEmbeddedResource(pal::dll_t bundle, const pal::char_t *type, const pal::char_t *name, void *unused)
+    {
+        TCHAR szBuffer[80];  // print buffer for info file
+        DWORD cbWritten;     // number of bytes written to resource info file
+        size_t cbString;
+        HRESULT hResult;
+
+        void *resourceBuffer;
+        size_t resourceSize;
+        if (!pal::open_resource(bundle, type, name, &resourceBuffer, &resourceSize))
+        {
+            return false;
+        }
+
+        pal::file_t file;
+        if (!pal::create_file(name, pal::File_Write, true, &file))
+        {
+            return false;
+        }
+
+        if (!pal::write_file(file, resourceBuffer, resourceSize))
+        {
+            return false;
+        }
+
+        if (!pal::close_file(file))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    bool ProcessManifest()
+    {
+        pal::char_t* buffer;
+        size_t size;
+        if(!pal::open_resource(m_bundle, RT_EMBED_MANIFEST, L"Manifest", (void **)&buffer, &size))
+        {
+            trace::info(_X("No Embed_Manifest, not a bundle"));
+            return false;
+        }
+
+        pal::stringstream_t manifest(buffer);
+        pal::char_t line[PATH_MAX];
+
+        if(!manifest.getline(line, PATH_MAX))
+        {
+            // Manifest fount, but no AppName!
+            trace::error(_X("Failure: Malformed bundle manifest"));
+            return false;
+        }
+
+        AppName = line;
+        trace::info(_X("App is %s:"), AppName);
+
+        /*
+        pal::char_t tmpPath[PATH_MAX];
+        if (!get_temp_path(tmpPath))
+        {
+            return false;
+        }
+        
+        UnbundleDir.Set(tmpPath);
+        UnbundleDir.Append(_X("\\"));
+        UnbundleDir.Append(AppName);
+        UnbundleDir.Append(_X("\\"));
+
+        CreateDirectory(UnbundleDir, NULL);
+
+        if (!SetCurrentDirectoryW(UnbundleDir))
+        {
+            trace::error(_X("Couldn't create/navigate to %s !GLR!"), UnbundleDir);
+            return false;
+        }
+        */
+
+        while (manifest.getline(line, PATH_MAX))
+        {
+            if (!pal::create_directory(line))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+public:
+    bool UnBundle()
+    {
+        if (!pal::get_own_library(&m_bundle))
+        {
+            return false;
+        }
+
+        if (!ProcessManifest())
+        {
+            return false;
+        }
+
+        if (!pal::enumerate_resources(m_bundle, RT_EMBED, SpillEmbeddedResource, 0))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    pal::string_t AppName;
+    pal::string_t UnbundleDir;
+
+private:
+    pal::dll_t m_bundle;
+};
+#endif // FEATURE_APPHOST
+
 int run(const int argc, const pal::char_t* argv[])
 {
     pal::string_t own_path;
@@ -147,7 +274,11 @@ int run(const int argc, const pal::char_t* argv[])
     }
 
 #ifdef FEATURE_APPHOST
-    if (!is_exe_enabled_for_execution(own_path))
+
+    BundleExtractor extractor;
+    bool isBundle = extractor.UnBundle();
+
+    if (!isBundle && !is_exe_enabled_for_execution(own_path))
     {
         trace::error(_X("A fatal error was encountered. This executable was not bound to load a managed DLL."));
         return StatusCode::AppHostExeNotBoundFailure;
@@ -155,7 +286,6 @@ int run(const int argc, const pal::char_t* argv[])
 #endif
 
     pal::dll_t fxr;
-
     pal::string_t own_dir = get_directory(own_path);
 
     // Load library

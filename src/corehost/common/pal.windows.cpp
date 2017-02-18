@@ -124,6 +124,18 @@ bool pal::load_library(const char_t* path, dll_t* dll)
     return true;
 }
 
+bool pal::get_own_library(dll_t* dll)
+{
+    *dll = ::GetModuleHandleW(NULL);
+    if (*dll == nullptr)
+    {
+        trace::error(_X("Failed to get handle of Host EXE, HRESULT: 0x%X"), HRESULT_FROM_WIN32(GetLastError()));
+        return false;
+    }
+
+    return true;
+}
+
 pal::proc_t pal::get_symbol(dll_t library, const char* name)
 {
     return ::GetProcAddress(library, name);
@@ -366,3 +378,141 @@ void pal::readdir(const string_t& path, std::vector<pal::string_t>* list)
     pal::readdir(path, _X("*"), list);
 }
 
+bool pal::open_resource(dll_t bundle, const pal::char_t *type, const pal::char_t *id, void **buffer, size_t *size)
+{
+    HRSRC resource = FindResourceW(bundle, id, type);
+    if (resource == NULL)
+    {
+        trace::error(_X("Failed find resource [%s], HRESULT: 0x%X"), id, HRESULT_FROM_WIN32(GetLastError()));
+        return false;
+    }
+
+    HGLOBAL loadedResource = LoadResource(bundle, resource);
+    if (loadedResource == NULL)
+    {
+        trace::error(_X("Error Loading embedded resource [%s], HRESULT: 0x%X"), id, HRESULT_FROM_WIN32(GetLastError()));
+        return false;
+    }
+
+    *buffer = LockResource(loadedResource);
+    if (*buffer == NULL)
+    {
+        trace::error(_X("Error Locking embedded resource [%s], HRESULT: 0x%X"), id, HRESULT_FROM_WIN32(GetLastError()));
+        return false;
+    }
+
+    *size = SizeofResource(bundle, resource);
+    if(*size == 0)
+    {
+        trace::error(_X("Couldn't get size of resource [%s], HRESULT: 0x%X"), id, HRESULT_FROM_WIN32(GetLastError()));
+        return false;
+    }
+
+    return true;
+}
+
+bool pal::enumerate_resources(pal::dll_t bundle, const pal::char_t *type, bool(*callback)(pal::dll_t, const pal::char_t *, const pal::char_t *, void *), void *passThroughParam)
+{
+    if (!EnumResourceNamesW(bundle, type, (ENUMRESNAMEPROCW)callback, (LONG_PTR)passThroughParam))
+    {
+        trace::error(_X("Error enumerating resources, HRESULT: 0x%X"), HRESULT_FROM_WIN32(GetLastError()));
+        return false;
+    }
+
+    return true;
+}
+
+bool pal::get_temp_path(pal::char_t *path)
+{
+    size_t pathLen = GetTempPathW(PATH_MAX, path);
+    if (pathLen == 0)
+    {
+        trace::error(_X("Couldn't find tmp directory, HRESULT: 0x%X"), HRESULT_FROM_WIN32(GetLastError()));
+        return false;
+    }
+    else if (pathLen > PATH_MAX)
+    {
+        trace::error(_X("Path to tmp directory is too long"));
+        return false;
+    }
+
+    return true;
+}
+
+bool pal::create_directory(const pal::char_t *path)
+{
+    bool created = CreateDirectoryW(path, NULL);
+    if (!created)
+    {
+        DWORD error = GetLastError();
+
+        if (error == ERROR_ALREADY_EXISTS)
+        {
+            // Fine, the directory already exists
+        }
+        else
+        {
+            trace::error(_X("Couldn't create directory [%s], HRESULT: 0x%X"), path, HRESULT_FROM_WIN32(error));
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool pal::create_file(const pal::char_t *path, int permissions, bool overwrite, pal::file_t *file)
+{
+    DWORD access = 0;
+    if (permissions & pal::File_Read)
+    {
+        access |= GENERIC_READ;
+    }
+    if (permissions & pal::File_Write)
+    {
+        access |= GENERIC_WRITE;
+    }
+    if (permissions & pal::File_Execute)
+    {
+        access |= GENERIC_EXECUTE;
+    }
+
+    int disposition = CREATE_NEW;
+    if (overwrite)
+    {
+        disposition = CREATE_ALWAYS;
+    }
+
+    *file = CreateFileW(path, access, 0, NULL, disposition, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (file == INVALID_HANDLE_VALUE)
+    {
+        trace::error(_X("Couldn't create file [%s], HRESULT: 0x%X"), path, HRESULT_FROM_WIN32(GetLastError()));
+        return false;
+    }
+
+    return true;
+}
+
+bool pal::write_file(const pal::file_t file, void *buffer, size_t numBytes)
+{
+    DWORD writtenSize;
+    bool written = WriteFile(file, buffer, numBytes, &writtenSize, NULL);
+    if (!written)
+    {
+        trace::error(_X("Error writing file, HRESULT: 0x%X"), HRESULT_FROM_WIN32(GetLastError()));
+        return false;
+    }
+
+    return true;
+}
+
+bool pal::close_file(const pal::file_t file)
+{
+    BOOL closed = CloseHandle(file);
+    if (!closed)
+    {
+        trace::error(_X("Error closing file, HRESULT: 0x%X"), HRESULT_FROM_WIN32(GetLastError()));
+        return false;
+    }
+
+    return true;
+}
