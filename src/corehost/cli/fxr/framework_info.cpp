@@ -23,18 +23,10 @@ bool compare_by_name_and_version(const framework_info &a, const framework_info &
 }
 
 /*static*/ void framework_info::get_all_framework_infos(
-    host_mode_t mode,
     const pal::string_t& own_dir,
     const pal::string_t& fx_name,
     std::vector<framework_info>* framework_infos)
 {
-    // No FX resolution for mixed apps 
-    if (mode == host_mode_t::split_fx)
-    {
-        trace::verbose(_X("Split/FX mode detected. Not gathering shared FX locations"));
-        return;
-    }
-
     std::vector<pal::string_t> global_dirs;
     bool multilevel_lookup = multilevel_lookup_enabled();
 
@@ -109,7 +101,7 @@ bool compare_by_name_and_version(const framework_info &a, const framework_info &
 /*static*/ bool framework_info::print_all_frameworks(const pal::string_t& own_dir, const pal::string_t& leading_whitespace)
 {
     std::vector<framework_info> framework_infos;
-    get_all_framework_infos(host_mode_t::muxer, own_dir, _X(""), &framework_infos);
+    get_all_framework_infos(own_dir, _X(""), &framework_infos);
     for (framework_info info : framework_infos)
     {
         trace::println(_X("%s%s %s [%s]"), leading_whitespace.c_str(), info.name.c_str(), info.version.as_str().c_str(), info.path.c_str());

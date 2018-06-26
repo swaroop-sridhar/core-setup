@@ -163,7 +163,7 @@ namespace Microsoft.DotNet.CoreSetup.Test.HostActivation.PortableApp
                     "--additionalprobingpath", additionalProbingPath,
                     appDll)
                 .EnvironmentVariable("COREHOST_TRACE", "1")
-                .EnvironmentVariable("DOTNET_MULTILEVEL_LOOKUP", "0")
+                .EnvironmentVariable("dDOTNET_MULTILEVEL_LOOKUP", "0")
                 .CaptureStdErr()
                 .CaptureStdOut()
                 .Execute()
