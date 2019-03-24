@@ -19,7 +19,6 @@ namespace Microsoft.NET.Build.Bundle
     /// </summary>
     public enum FileType : byte
     {
-        Application,        // Represents the main app, also an assembly
         Assembly,           // IL Assemblies, which will be processed from bundle
         Ready2Run,          // R2R assemblies, currently unused, spilled to disk.
         DepsJson,           // Configuration file, processed from bundle
