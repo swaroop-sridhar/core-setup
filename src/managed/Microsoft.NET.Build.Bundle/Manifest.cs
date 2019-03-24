@@ -33,6 +33,7 @@ namespace Microsoft.NET.Build.Bundle
     ///     MajorVersion
     ///     MinorVersion
     ///     NumEmbeddedFiles
+    ///     ExtractionID
     ///     
     /// - - - - - - Manifest Entries - - - - - - - - - - -
     ///     Series of FileEntries (for each embedded file)
@@ -52,11 +53,18 @@ namespace Microsoft.NET.Build.Bundle
         public const uint MinorVersion = 1;
         public const char DirectorySeparatorChar = '/';
 
+        // Bundle ID is a string that is used to uniquely 
+        // identify this bundle. It is choosen to be compatible
+        // with path-names so that the AppHost can use it in
+        // extraction path.
+        string BundleID;
+
         public List<FileEntry> Files;
 
         public Manifest()
         {
             Files = new List<FileEntry>();
+            BundleID = Path.GetRandomFileName();
         }
 
         public void Write(BinaryWriter writer)
@@ -67,6 +75,7 @@ namespace Microsoft.NET.Build.Bundle
             writer.Write(MajorVersion);
             writer.Write(MinorVersion);
             writer.Write(Files.Count());
+            writer.Write(BundleID);
 
             // Write the manifest entries
             foreach (FileEntry entry in Files)
@@ -105,13 +114,13 @@ namespace Microsoft.NET.Build.Bundle
             reader.BaseStream.Position = headerOffset;
             uint majorVersion = reader.ReadUInt32();
             uint minorVersion = reader.ReadUInt32();
+            int fileCount = reader.ReadInt32();
+            manifest.BundleID = reader.ReadString(); // Bundle ID
 
             if (majorVersion != MajorVersion || minorVersion != MinorVersion)
             {
                 throw new BundleException("Extraction failed: Invalid Version");
             }
-
-            int fileCount = reader.ReadInt32();
 
             // Read the manifest entries
             for (long i = 0; i < fileCount; i++)

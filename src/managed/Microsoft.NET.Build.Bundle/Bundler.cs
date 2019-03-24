@@ -19,7 +19,6 @@ namespace Microsoft.NET.Build.Bundle
         string OutputDir;
         bool EmbedPDBs;
 
-        string Application;
         string DepsJson;
         string RuntimeConfigJson;
         string RuntimeConfigDevJson;
@@ -60,7 +59,7 @@ namespace Microsoft.NET.Build.Bundle
 
             // Set default names
             string baseName = Path.GetFileNameWithoutExtension(HostName);
-            Application = baseName + ".dll";
+            string application = baseName + ".dll";
             DepsJson = baseName + ".deps.json";
             RuntimeConfigJson = baseName + ".runtimeconfig.json";
             RuntimeConfigDevJson = baseName + ".runtimeconfig.dev.json";
@@ -76,7 +75,7 @@ namespace Microsoft.NET.Build.Bundle
             };
 
             checkFileExists(HostName);
-            checkFileExists(Application);
+            checkFileExists(application);
             // The *.json files may or may not exist.
         }
 
@@ -138,11 +137,6 @@ namespace Microsoft.NET.Build.Bundle
             if (fileRelativePath.Equals(RuntimeConfigJson))
             {
                 return FileType.RuntimeConfigJson;
-            }
-
-            if (fileRelativePath.Equals(Application))
-            {
-                return FileType.Application;
             }
 
             try
