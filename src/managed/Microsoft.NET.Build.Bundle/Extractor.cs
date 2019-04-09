@@ -54,7 +54,7 @@ namespace Microsoft.NET.Build.Bundle
                             long size = entry.Size;
                             do
                             {
-                                int copySize = (int)(size % int.MaxValue);
+                                int copySize = (int)(size <= int.MaxValue ? size : int.MaxValue);
                                 file.Write(reader.ReadBytes(copySize));
                                 size -= copySize;
                             } while (size > 0);
