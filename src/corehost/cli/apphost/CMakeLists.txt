@@ -20,6 +20,9 @@ set(SKIP_VERSIONING 1)
 
 set(SOURCES
     ../fxr/fx_ver.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/bundle_runner.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/manifest.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/file_entry.cpp
 )
 
 set(HEADERS

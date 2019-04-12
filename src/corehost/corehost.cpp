@@ -7,9 +7,12 @@
 #include "fxr_resolver.h"
 #include "error_codes.h"
 #include "fx_ver.h"
-#include "bdl_processor.h"
 #include "trace.h"
 #include "utils.h"
+
+#if FEATURE_APPHOST
+#include "bundle_runner.h"
+#endif
 
 #if FEATURE_APPHOST
 #define CURHOST_TYPE    _X("apphost")
