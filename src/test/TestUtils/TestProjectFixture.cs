@@ -272,7 +272,7 @@ namespace Microsoft.DotNet.CoreSetup.Test
             if(selfContained != null)
             {
                 publishArgs.Add("--self-contained");
-                publishArgs.Add(runtime);
+                publishArgs.Add(selfContained);
             }
 
             if (outputDirectory != null)

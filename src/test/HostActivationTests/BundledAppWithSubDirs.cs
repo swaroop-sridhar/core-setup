@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.CoreSetup.Test.HostActivation
                 .HaveStdOutContaining("Wow! We now say hello to the big world and you.");
         }
 
-        [Fact]
+        /* [Fact]
         private void Bundled_Self_Contained_App_Run_Succeeds()
         {
             var fixture = sharedTestState.TestSelfContainedFixture.Copy();
@@ -83,7 +83,7 @@ namespace Microsoft.DotNet.CoreSetup.Test.HostActivation
                 .Pass()
                 .And
                 .HaveStdOutContaining("Wow! We now say hello to the big world and you.");
-        }
+        } */
 
         public class SharedTestState : IDisposable
         {
@@ -98,18 +98,18 @@ namespace Microsoft.DotNet.CoreSetup.Test.HostActivation
                 TestFrameworkDependentFixture = new TestProjectFixture("StandaloneAppWithSubDirs", RepoDirectories);
                 TestFrameworkDependentFixture
                     .EnsureRestoredForRid(TestFrameworkDependentFixture.CurrentRid, RepoDirectories.CorehostPackages)
-                    .PublishProject(runtime: TestFrameworkDependentFixture.CurrentRid, selfContained: "false");
-
-                TestSelfContainedFixture = new TestProjectFixture("StandaloneAppWithSubDirs", RepoDirectories);
+                    .PublishProject(runtime: TestFrameworkDependentFixture.CurrentRid, selfContained: "false"); 
+                    
+                /* TestSelfContainedFixture = new TestProjectFixture("StandaloneAppWithSubDirs", RepoDirectories);
                 TestSelfContainedFixture
                     .EnsureRestoredForRid(TestSelfContainedFixture.CurrentRid, RepoDirectories.CorehostPackages)
-                    .PublishProject(runtime: TestSelfContainedFixture.CurrentRid);
+                    .PublishProject(runtime: TestSelfContainedFixture.CurrentRid); */
             }
 
             public void Dispose()
             {
-                TestFrameworkDependentFixture.Dispose();
-                TestSelfContainedFixture.Dispose();
+                //TestFrameworkDependentFixture.Dispose();
+                //TestSelfContainedFixture.Dispose();
             }
         }
     }

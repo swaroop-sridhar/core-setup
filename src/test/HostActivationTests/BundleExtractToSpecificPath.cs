@@ -11,7 +11,7 @@ using Microsoft.DotNet.Cli.Build.Framework;
 
 namespace Microsoft.DotNet.CoreSetup.Test.HostActivation
 {
-    public class BundleExtractToSpecificPath : IClassFixture<BundledAppWithSubDirs.SharedTestState>
+    public class BundleExtractToSpecificPath : IClassFixture<BundleExtractToSpecificPath.SharedTestState>
     {
         private SharedTestState sharedTestState;
 
@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.CoreSetup.Test.HostActivation
             var bundleDir = Directory.CreateDirectory(bundlePath);
 
             // Bundle the publish directory.
-            var bundler = new Microsoft.NET.HostModel.Bundle.Bundler(hostName, bundlePath);
+            var bundler = new Microsoft.NET.HostModel.Bundle.Bundler(hostName, bundlePath, false, true);
             string singleFile = bundler.GenerateBundle(publishPath);
             var bundledFiles = new List<string>(bundler.BundleManifest.Files.Count);
             foreach (var file in bundler.BundleManifest.Files)
@@ -102,7 +102,7 @@ namespace Microsoft.DotNet.CoreSetup.Test.HostActivation
 
             public void Dispose()
             {
-                TestFixture.Dispose();
+                //TestFixture.Dispose();
             }
         }
     }
