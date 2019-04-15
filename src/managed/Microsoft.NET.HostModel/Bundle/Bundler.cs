@@ -24,6 +24,7 @@ namespace Microsoft.NET.HostModel.Bundle
         readonly string RuntimeConfigDevJson;
 
         readonly Trace trace;
+        public readonly Manifest BundleManifest;
 
         /// <summary>
         /// Align embedded assemblies such that they can be loaded 
@@ -47,6 +48,7 @@ namespace Microsoft.NET.HostModel.Bundle
 
             EmbedPDBs = embedPDBs;
             trace = new Trace(diagnosticOutput);
+            BundleManifest = new Manifest();
         }
 
         /// <summary>
@@ -164,7 +166,6 @@ namespace Microsoft.NET.HostModel.Bundle
 
             using (BinaryWriter writer = new BinaryWriter(File.OpenWrite(bundlePath)))
             {
-                Manifest manifest = new Manifest();
                 Stream bundle = writer.BaseStream;
                 bundle.Position = bundle.Length;
 
@@ -182,13 +183,13 @@ namespace Microsoft.NET.HostModel.Bundle
                         FileType type = InferType(fileSpec.BundleRelativePath, file);
                         long startOffset = AddToBundle(bundle, file, type);
                         FileEntry entry = new FileEntry(type, fileSpec.BundleRelativePath, startOffset, file.Length);
-                        manifest.Files.Add(entry);
+                        BundleManifest.Files.Add(entry);
                         trace.Log($"Embed: {entry}");
                     }
                 }
 
                 // Write the bundle manifest
-                long manifestOffset = manifest.Write(writer);
+                long manifestOffset = BundleManifest.Write(writer);
                 trace.Log($"Manifest: Offset={manifestOffset}, Size={writer.BaseStream.Position - manifestOffset}");
                 trace.Log($"Bundle: Path={bundlePath} Size={bundle.Length}");
             }
