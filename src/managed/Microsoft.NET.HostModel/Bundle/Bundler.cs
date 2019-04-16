@@ -144,10 +144,9 @@ namespace Microsoft.NET.HostModel.Bundle
         {
             trace.Log($"Bundler version {Version}");
 
-            string bundlePath = Path.Combine(OutputDir, HostName);
-            if (File.Exists(bundlePath))
+            if(fileSpecs.Where(x => !x.IsValid()).Count() != 0)
             {
-                trace.Log($"Ovewriting existing File {bundlePath}");
+                throw new ArgumentException("Invalid input specification: Found entry with empty source-path or bundle-relative-path.");
             }
 
             string hostSource;
@@ -158,6 +157,12 @@ namespace Microsoft.NET.HostModel.Bundle
             catch (InvalidOperationException)
             {
                 throw new ArgumentException("Input must uniquely specify the host binary");
+            }
+
+            string bundlePath = Path.Combine(OutputDir, HostName);
+            if (File.Exists(bundlePath))
+            {
+                trace.Log($"Ovewriting existing File {bundlePath}");
             }
 
             // Start with a copy of the host executable.

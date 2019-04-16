@@ -23,6 +23,12 @@ namespace Microsoft.NET.HostModel.Bundle
             SourcePath = sourcePath;
             BundleRelativePath = bundleRelativePath;
         }
+
+        public bool IsValid()
+        {
+            return !string.IsNullOrWhiteSpace(SourcePath) && 
+                   !string.IsNullOrWhiteSpace(BundleRelativePath);
+        }
     }
 }
 
