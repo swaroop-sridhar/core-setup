@@ -26,31 +26,28 @@ namespace Microsoft.DotNet.CoreSetup.Test.HostActivation
             var fixture = sharedTestState.TestFixture.Copy();
             var appName = Path.GetFileNameWithoutExtension(fixture.TestProject.AppDll);
             var hostName = Path.GetFileName(fixture.TestProject.AppExe);
+            string publishDir = fixture.TestProject.OutputDirectory;
 
-            string publishPath = fixture.TestProject.OutputDirectory;
-            string bundlePath = Path.Combine(fixture.TestProject.ProjectDirectory, "bundle");
-            var bundleDir = Directory.CreateDirectory(bundlePath);
+            // Publish the bundle
+            var bundleDir = Directory.CreateDirectory(Path.Combine(fixture.TestProject.ProjectDirectory, "bundle"));
+            var bundler = new Microsoft.NET.HostModel.Bundle.Bundler(hostName, bundleDir.FullName);
+            string singleFile = bundler.GenerateBundle(publishDir);
 
-            // Bundle the publish directory.
-            var bundler = new Microsoft.NET.HostModel.Bundle.Bundler(hostName, bundlePath);
-            string singleFile = bundler.GenerateBundle(publishPath);
+            // Compute bundled files
             var bundledFiles = new List<string>(bundler.BundleManifest.Files.Count);
-            foreach (var file in bundler.BundleManifest.Files)
-            {
-                bundledFiles.Add(file.RelativePath);
-            }
+            bundler.BundleManifest.Files.ForEach(file => bundledFiles.Add(file.RelativePath));
 
+            // Verify expected files in the bundle directory
             bundleDir.Should().HaveFile(hostName);
             bundleDir.Should().NotHaveFiles(bundledFiles);
 
-            string extractBasePath = Path.Combine(fixture.TestProject.ProjectDirectory, "extract");
-            var extractBaseDir = Directory.CreateDirectory(extractBasePath);
-
+            // Create a directory for extraction.
+            var extractBaseDir = Directory.CreateDirectory(Path.Combine(fixture.TestProject.ProjectDirectory, "extract"));
             extractBaseDir.Should().NotHaveDirectory(appName);
 
             // Run the bunded app for the first time, and extract files to 
             // $DOTNET_BUNDLE_EXTRACT_BASE_DIR/<app>/bundle-id
-            Environment.SetEnvironmentVariable("DOTNET_BUNDLE_EXTRACT_BASE_DIR", extractBasePath);
+            Environment.SetEnvironmentVariable("DOTNET_BUNDLE_EXTRACT_BASE_DIR", extractBaseDir.FullName);
             Command.Create(singleFile)
                 .CaptureStdErr()
                 .CaptureStdOut()

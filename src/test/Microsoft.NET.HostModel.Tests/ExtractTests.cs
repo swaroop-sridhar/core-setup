@@ -31,7 +31,7 @@ namespace Microsoft.NET.HostModel.Tests
             Assert.Throws<BundleException>(() => extractor.ExtractFiles());
         }
 
-        public void AllBundledFilesAreExtracted(bool embedPDBs)
+        public void AllBundledFilesAreExtracted()
         {
             var fixture = sharedTestState.TestFixture
                 .Copy();
@@ -41,19 +41,16 @@ namespace Microsoft.NET.HostModel.Tests
             var appName = Path.GetFileNameWithoutExtension(fixture.TestProject.AppExe);
 
             var bundleDir = Directory.CreateDirectory(Path.Combine(fixture.TestProject.ProjectDirectory, "bundle"));
-
-            var bundler = new Microsoft.NET.HostModel.Bundle.Bundler(hostName, bundleDir.FullName);
+            var bundler = new Bundler(hostName, bundleDir.FullName);
             string singleFile = bundler.GenerateBundle(publishDir);
+
             var bundledFiles = new List<string>(bundler.BundleManifest.Files.Count);
-            foreach (var file in bundler.BundleManifest.Files)
-            {
-                bundledFiles.Add(file.RelativePath);
-            }
+            bundler.BundleManifest.Files.ForEach(file => bundledFiles.Add(file.RelativePath));
 
-            var extractDir = Directory.CreateDirectory(Path.Combine(fixture.TestProject.ProjectDirectory, "extract"));
-            new Extractor(singleFile, extractDir.FullName).ExtractFiles();
-
-            extractDir.Should().OnlyHaveFiles(bundledFiles);
+            // After extraction, bundleDir must have the same named files as pubilshDir. 
+            // In bundleDir, we have the single-file in place of the apphost, but they both have the same name.
+            new Extractor(singleFile, bundleDir.FullName).ExtractFiles();
+            bundleDir.Should().OnlyHaveFiles(bundledFiles);
         }
 
 

@@ -118,7 +118,8 @@ namespace Microsoft.NET.HostModel.Tests
                 TestFixture = new TestProjectFixture("StandaloneAppWithSubDirs", RepoDirectories);
                 TestFixture
                     .EnsureRestoredForRid(TestFixture.CurrentRid, RepoDirectories.CorehostPackages)
-                    .PublishProject(runtime: TestFixture.CurrentRid);
+                    .PublishProject(runtime: TestFixture.CurrentRid,
+                                    outputDirectory: Path.Combine(TestFixture.TestProject.ProjectDirectory, "publish"));
             }
 
             public void Dispose()

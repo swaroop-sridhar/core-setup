@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Xunit;
-using Microsoft.DotNet.Cli.Build.Framework;
 using Microsoft.DotNet.CoreSetup.Test;
 using Microsoft.NET.HostModel.Bundle;
 
@@ -21,12 +20,6 @@ namespace Microsoft.NET.HostModel.Tests
             sharedTestState = fixture;
         }
 
-        private DirectoryInfo GetBundleOutputDir(TestProjectFixture fixture)
-        {
-            string singleFileDir = Path.Combine(fixture.TestProject.ProjectDirectory, "bundle");
-            return Directory.CreateDirectory(singleFileDir);
-        }
-
         [Fact]
         public void TestWithEmptySpecFails()
         {
@@ -34,7 +27,7 @@ namespace Microsoft.NET.HostModel.Tests
                 .Copy();
 
             var hostName = Path.GetFileName(fixture.TestProject.AppExe);
-            Bundler bundler = new Bundler(hostName, GetBundleOutputDir(fixture).FullName);
+            Bundler bundler = new Bundler(hostName, "bundle");
 
             FileSpec[][] invalidSpecs =
             {
@@ -64,7 +57,7 @@ namespace Microsoft.NET.HostModel.Tests
             string[] files = { $"{appName}.dll", $"{appName}.deps.json", $"{appName}.runtimeconfig.json" };
             Array.ForEach(files, x => fileSpecs.Add(new FileSpec(x, x)));
 
-            Bundler bundler = new Bundler(hostName, GetBundleOutputDir(fixture).FullName);
+            Bundler bundler = new Bundler(hostName, "bundle");
             Assert.Throws<ArgumentException>(() => bundler.GenerateBundle(fileSpecs));
         }
 
@@ -79,7 +72,7 @@ namespace Microsoft.NET.HostModel.Tests
             string publishDir = fixture.TestProject.OutputDirectory;
             var hostName = Path.GetFileName(fixture.TestProject.AppExe);
             var appName = Path.GetFileNameWithoutExtension(fixture.TestProject.AppExe);
-            var bundleDir = GetBundleOutputDir(fixture);
+            var bundleDir = Directory.CreateDirectory(Path.Combine(fixture.TestProject.ProjectDirectory, "bundle"));
 
             new Bundler(hostName, bundleDir.FullName, embedPDBs).GenerateBundle(publishDir);
 
@@ -106,7 +99,7 @@ namespace Microsoft.NET.HostModel.Tests
             string publishDir = fixture.TestProject.OutputDirectory;
             var hostName = Path.GetFileName(fixture.TestProject.AppExe);
             var appName = Path.GetFileNameWithoutExtension(fixture.TestProject.AppExe);
-            var bundleDir = GetBundleOutputDir(fixture);
+            var bundleDir = Directory.CreateDirectory(Path.Combine(fixture.TestProject.ProjectDirectory, "bundle"));
 
             // Make up a app.runtimeconfig.dev.json file in the publish directory.
             File.Copy(Path.Combine(publishDir, $"{appName}.runtimeconfig.json"), 
