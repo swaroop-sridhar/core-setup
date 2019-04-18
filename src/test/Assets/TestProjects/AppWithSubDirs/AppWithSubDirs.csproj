@@ -11,7 +11,7 @@
     <ItemGroup>
       <FilesToCopy Include="$(MSBuildThisFileDirectory)\Sentence\**\*.*" />
     </ItemGroup>
-    
+
     <Copy SourceFiles="@(FilesToCopy)" DestinationFolder="$(PublishDir)\Sentence\%(RecursiveDir)" SkipUnchangedFiles="true"/>
   </Target>
 

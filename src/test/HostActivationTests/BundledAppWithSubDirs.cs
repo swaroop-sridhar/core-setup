@@ -31,24 +31,9 @@ namespace Microsoft.DotNet.CoreSetup.Test.HostActivation
             return singleFile;
         }
 
-        [Fact]
-        private void Bundled_Framework_dependent_App_Run_Succeeds()
+        private void RunTheApp(string path)
         {
-            var fixture = sharedTestState.TestFrameworkDependentFixture.Copy();
-            var singleFile = BundleApp(fixture);
-
-            // Run the bundled app (extract files)
-            Command.Create(singleFile)
-                .CaptureStdErr()
-                .CaptureStdOut()
-                .Execute()
-                .Should()
-                .Pass()
-                .And
-                .HaveStdOutContaining("Wow! We now say hello to the big world and you.");
-
-            // Run the bundled app again (reuse extracted files)
-            Command.Create(singleFile)
+            Command.Create(path)
                 .CaptureStdErr()
                 .CaptureStdOut()
                 .Execute()
@@ -58,32 +43,31 @@ namespace Microsoft.DotNet.CoreSetup.Test.HostActivation
                 .HaveStdOutContaining("Wow! We now say hello to the big world and you.");
         }
 
-        /* [Fact]
+        [Fact]
+        private void Bundled_Framework_dependent_App_Run_Succeeds()
+        {
+            var fixture = sharedTestState.TestFrameworkDependentFixture.Copy();
+            var singleFile = BundleApp(fixture);
+
+            // Run the bundled app (extract files)
+            RunTheApp(singleFile);
+
+            // Run the bundled app again (reuse extracted files)
+            RunTheApp(singleFile);
+        }
+
+        [Fact]
         private void Bundled_Self_Contained_App_Run_Succeeds()
         {
             var fixture = sharedTestState.TestSelfContainedFixture.Copy();
             var singleFile = BundleApp(fixture);
 
             // Run the bundled app (extract files)
-            Command.Create(singleFile)
-                .CaptureStdErr()
-                .CaptureStdOut()
-                .Execute()
-                .Should()
-                .Pass()
-                .And
-                .HaveStdOutContaining("Wow! We now say hello to the big world and you.");
+            RunTheApp(singleFile);
 
             // Run the bundled app again (reuse extracted files)
-            Command.Create(singleFile)
-                .CaptureStdErr()
-                .CaptureStdOut()
-                .Execute()
-                .Should()
-                .Pass()
-                .And
-                .HaveStdOutContaining("Wow! We now say hello to the big world and you.");
-        } */
+            RunTheApp(singleFile);
+        }
 
         public class SharedTestState : IDisposable
         {
@@ -95,21 +79,21 @@ namespace Microsoft.DotNet.CoreSetup.Test.HostActivation
             {
                 RepoDirectories = new RepoDirectoriesProvider();
 
-                TestFrameworkDependentFixture = new TestProjectFixture("StandaloneAppWithSubDirs", RepoDirectories);
+                TestFrameworkDependentFixture = new TestProjectFixture("AppWithSubDirs", RepoDirectories);
                 TestFrameworkDependentFixture
                     .EnsureRestoredForRid(TestFrameworkDependentFixture.CurrentRid, RepoDirectories.CorehostPackages)
-                    .PublishProject(runtime: TestFrameworkDependentFixture.CurrentRid, selfContained: "false"); 
-                    
-                /* TestSelfContainedFixture = new TestProjectFixture("StandaloneAppWithSubDirs", RepoDirectories);
+                    .PublishProject(runtime: TestFrameworkDependentFixture.CurrentRid);
+
+                TestSelfContainedFixture = new TestProjectFixture("AppWithSubDirs", RepoDirectories);
                 TestSelfContainedFixture
                     .EnsureRestoredForRid(TestSelfContainedFixture.CurrentRid, RepoDirectories.CorehostPackages)
-                    .PublishProject(runtime: TestSelfContainedFixture.CurrentRid); */
+                    .PublishProject(runtime: TestSelfContainedFixture.CurrentRid);
             }
 
             public void Dispose()
             {
-                //TestFrameworkDependentFixture.Dispose();
-                //TestSelfContainedFixture.Dispose();
+                TestFrameworkDependentFixture.Dispose();
+                TestSelfContainedFixture.Dispose();
             }
         }
     }
