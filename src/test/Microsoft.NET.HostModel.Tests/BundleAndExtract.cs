@@ -3,12 +3,14 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Xunit;
 using Microsoft.DotNet.Cli.Build.Framework;
+using Microsoft.DotNet.CoreSetup.Test;
 using Microsoft.NET.HostModel.Bundle;
 
-namespace Microsoft.DotNet.CoreSetup.Test.BundleTests.BundleExtract
+namespace Microsoft.NET.HostModel.Tests
 {
     public class BundleAndExtract : IClassFixture<BundleAndExtract.SharedTestState>
     {
@@ -19,13 +21,9 @@ namespace Microsoft.DotNet.CoreSetup.Test.BundleTests.BundleExtract
             sharedTestState = fixture;
         }
 
-        private void Run(TestProjectFixture fixture, string publishDir, string singleFileDir)
+        public void RunTheApp(string path)
         {
-            var dotnet = fixture.SdkDotnet;
-            var hostName = Path.GetFileName(fixture.TestProject.AppExe);
-
-            // Run the App normally
-            Command.Create(Path.Combine(publishDir, hostName))
+            Command.Create(path)
                 .CaptureStdErr()
                 .CaptureStdOut()
                 .Execute()
@@ -33,6 +31,14 @@ namespace Microsoft.DotNet.CoreSetup.Test.BundleTests.BundleExtract
                 .Pass()
                 .And
                 .HaveStdOutContaining("Wow! We now say hello to the big world and you.");
+        }
+
+        private void BundleExtractRun(TestProjectFixture fixture, string publishDir, string singleFileDir)
+        {
+            var hostName = Path.GetFileName(fixture.TestProject.AppExe);
+
+            // Run the App normally
+            RunTheApp(Path.Combine(publishDir, hostName));
 
             // Bundle to a single-file
             Bundler bundler = new Bundler(hostName, singleFileDir);
@@ -43,17 +49,10 @@ namespace Microsoft.DotNet.CoreSetup.Test.BundleTests.BundleExtract
             extractor.ExtractFiles();
 
             // Run the extracted app
-            Command.Create(singleFile)
-                .CaptureStdErr()
-                .CaptureStdOut()
-                .Execute()
-                .Should()
-                .Pass()
-                .And
-                .HaveStdOutContaining("Wow! We now say hello to the big world and you.");
+            RunTheApp(singleFile);
         }
 
-        private string GetSingleFileDir(TestProjectFixture fixture)
+        private string GetBundleOutputDir(TestProjectFixture fixture)
         {
             // Create a directory for bundle/extraction output.
             // This directory shouldn't be within TestProject.OutputDirectory, since the bundler
@@ -78,9 +77,9 @@ namespace Microsoft.DotNet.CoreSetup.Test.BundleTests.BundleExtract
                 .Copy();
 
             string publishDir = fixture.TestProject.OutputDirectory;
-            string singleFileDir = GetSingleFileDir(fixture);
+            string outputDir = GetBundleOutputDir(fixture);
 
-            Run(fixture, publishDir, singleFileDir);
+            BundleExtractRun(fixture, publishDir, outputDir);
         }
 
         [Fact]
@@ -90,9 +89,9 @@ namespace Microsoft.DotNet.CoreSetup.Test.BundleTests.BundleExtract
                 .Copy();
 
             string publishDir = RelativePath(fixture.TestProject.OutputDirectory);
-            string singleFileDir = RelativePath(GetSingleFileDir(fixture));
+            string outputDir = RelativePath(GetBundleOutputDir(fixture));
 
-            Run(fixture, publishDir, singleFileDir);
+            BundleExtractRun(fixture, publishDir, outputDir);
         }
 
         [Fact]
@@ -102,9 +101,9 @@ namespace Microsoft.DotNet.CoreSetup.Test.BundleTests.BundleExtract
                 .Copy();
 
             string publishDir = RelativePath(fixture.TestProject.OutputDirectory) + Path.DirectorySeparatorChar;
-            string singleFileDir = RelativePath(GetSingleFileDir(fixture)) + Path.DirectorySeparatorChar;
+            string outputDir = RelativePath(GetBundleOutputDir(fixture)) + Path.DirectorySeparatorChar;
 
-            Run(fixture, publishDir, singleFileDir);
+            BundleExtractRun(fixture, publishDir, outputDir);
         }
 
         public class SharedTestState : IDisposable
