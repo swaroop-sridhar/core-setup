@@ -58,7 +58,7 @@ namespace Microsoft.NET.HostModel.Tests
             // This directory shouldn't be within TestProject.OutputDirectory, since the bundler
             // will (attempt to) embed all files below the TestProject.OutputDirectory tree into one file.
 
-            string singleFileDir = Path.Combine(fixture.TestProject.ProjectDirectory, "oneExe");
+            string singleFileDir = Path.Combine(fixture.TestProject.ProjectDirectory, "bundle");
             Directory.CreateDirectory(singleFileDir);
 
             return singleFileDir;

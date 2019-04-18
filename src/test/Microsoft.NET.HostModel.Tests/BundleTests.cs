@@ -23,11 +23,7 @@ namespace Microsoft.NET.HostModel.Tests
 
         private DirectoryInfo GetBundleOutputDir(TestProjectFixture fixture)
         {
-            // Create a directory for bundle/extraction output.
-            // This directory shouldn't be within TestProject.OutputDirectory, since the bundler
-            // will (attempt to) embed all files below the TestProject.OutputDirectory tree into one file.
-
-            string singleFileDir = Path.Combine(fixture.TestProject.ProjectDirectory, "oneExe");
+            string singleFileDir = Path.Combine(fixture.TestProject.ProjectDirectory, "bundle");
             return Directory.CreateDirectory(singleFileDir);
         }
 
@@ -75,6 +71,33 @@ namespace Microsoft.NET.HostModel.Tests
         [InlineData(true)]
         [InlineData(false)]
         [Theory]
+        public void TestFilesInOutputDir(bool embedPDBs)
+        {
+            var fixture = sharedTestState.TestFixture
+                .Copy();
+
+            string publishDir = fixture.TestProject.OutputDirectory;
+            var hostName = Path.GetFileName(fixture.TestProject.AppExe);
+            var appName = Path.GetFileNameWithoutExtension(fixture.TestProject.AppExe);
+            var bundleDir = GetBundleOutputDir(fixture);
+
+            new Bundler(hostName, bundleDir.FullName, embedPDBs).GenerateBundle(publishDir);
+
+            var expectedFiles = new List<string>(2);
+            expectedFiles.Add(hostName);
+
+            if(!embedPDBs)
+            {
+                expectedFiles.Add($"{appName}.pdb");
+            }
+
+            bundleDir.Should().OnlyHaveFiles(expectedFiles);
+        }
+
+
+        [InlineData(true)]
+        [InlineData(false)]
+        [Theory]
         public void TestFilesNotBundled(bool embedPDBs)
         {
             var fixture = sharedTestState.TestFixture
@@ -112,7 +135,8 @@ namespace Microsoft.NET.HostModel.Tests
                 TestFixture = new TestProjectFixture("StandaloneApp", RepoDirectories);
                 TestFixture
                     .EnsureRestoredForRid(TestFixture.CurrentRid, RepoDirectories.CorehostPackages)
-                    .PublishProject(runtime: TestFixture.CurrentRid);
+                    .PublishProject(runtime: TestFixture.CurrentRid,
+                                    outputDirectory: Path.Combine(TestFixture.TestProject.ProjectDirectory, "publish"));
             }
 
             public void Dispose()

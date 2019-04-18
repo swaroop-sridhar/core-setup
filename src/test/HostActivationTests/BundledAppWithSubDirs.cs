@@ -82,12 +82,14 @@ namespace Microsoft.DotNet.CoreSetup.Test.HostActivation
                 TestFrameworkDependentFixture = new TestProjectFixture("AppWithSubDirs", RepoDirectories);
                 TestFrameworkDependentFixture
                     .EnsureRestoredForRid(TestFrameworkDependentFixture.CurrentRid, RepoDirectories.CorehostPackages)
-                    .PublishProject(runtime: TestFrameworkDependentFixture.CurrentRid);
+                    .PublishProject(runtime: TestFrameworkDependentFixture.CurrentRid,
+                                    outputDirectory: Path.Combine(TestFrameworkDependentFixture.TestProject.ProjectDirectory, "publish"));
 
                 TestSelfContainedFixture = new TestProjectFixture("AppWithSubDirs", RepoDirectories);
                 TestSelfContainedFixture
                     .EnsureRestoredForRid(TestSelfContainedFixture.CurrentRid, RepoDirectories.CorehostPackages)
-                    .PublishProject(runtime: TestSelfContainedFixture.CurrentRid);
+                    .PublishProject(runtime: TestSelfContainedFixture.CurrentRid,
+                                    outputDirectory: Path.Combine(TestSelfContainedFixture.TestProject.ProjectDirectory, "publish"));
             }
 
             public void Dispose()

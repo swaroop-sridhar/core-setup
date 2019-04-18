@@ -31,6 +31,31 @@ namespace Microsoft.NET.HostModel.Tests
             Assert.Throws<BundleException>(() => extractor.ExtractFiles());
         }
 
+        public void AllBundledFilesAreExtracted(bool embedPDBs)
+        {
+            var fixture = sharedTestState.TestFixture
+                .Copy();
+
+            string publishDir = fixture.TestProject.OutputDirectory;
+            var hostName = Path.GetFileName(fixture.TestProject.AppExe);
+            var appName = Path.GetFileNameWithoutExtension(fixture.TestProject.AppExe);
+
+            var bundleDir = Directory.CreateDirectory(Path.Combine(fixture.TestProject.ProjectDirectory, "bundle"));
+
+            var bundler = new Microsoft.NET.HostModel.Bundle.Bundler(hostName, bundleDir.FullName);
+            string singleFile = bundler.GenerateBundle(publishDir);
+            var bundledFiles = new List<string>(bundler.BundleManifest.Files.Count);
+            foreach (var file in bundler.BundleManifest.Files)
+            {
+                bundledFiles.Add(file.RelativePath);
+            }
+
+            var extractDir = Directory.CreateDirectory(Path.Combine(fixture.TestProject.ProjectDirectory, "extract"));
+            new Extractor(singleFile, extractDir.FullName).ExtractFiles();
+
+            extractDir.Should().OnlyHaveFiles(bundledFiles);
+        }
+
 
         public class SharedTestState : IDisposable
         {
@@ -44,7 +69,8 @@ namespace Microsoft.NET.HostModel.Tests
                 TestFixture = new TestProjectFixture("StandaloneApp", RepoDirectories);
                 TestFixture
                     .EnsureRestoredForRid(TestFixture.CurrentRid, RepoDirectories.CorehostPackages)
-                    .PublishProject(runtime: TestFixture.CurrentRid);
+                    .PublishProject(runtime: TestFixture.CurrentRid,
+                                    outputDirectory: Path.Combine(TestFixture.TestProject.ProjectDirectory, "publish"));
             }
 
             public void Dispose()
