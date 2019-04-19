@@ -127,7 +127,7 @@ namespace Microsoft.NET.HostModel.Tests
 
             public void Dispose()
             {
-                // TestFixture.Dispose();
+                TestFixture.Dispose();
             }
         }
     }
