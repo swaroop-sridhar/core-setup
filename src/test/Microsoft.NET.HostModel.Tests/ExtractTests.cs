@@ -21,38 +21,54 @@ namespace Microsoft.NET.HostModel.Tests
             sharedTestState = fixture;
         }
 
+        private static string GetHostName(TestProjectFixture fixture)
+        {
+            return Path.GetFileName(fixture.TestProject.AppExe);
+        }
+
+        private static string GetPublishPath(TestProjectFixture fixture)
+        {
+            return Path.Combine(fixture.TestProject.ProjectDirectory, "publish");
+        }
+
+        private static DirectoryInfo GetBundleDir(TestProjectFixture fixture)
+        {
+            return Directory.CreateDirectory(Path.Combine(fixture.TestProject.ProjectDirectory, "bundle"));
+        }
+
         [Fact]
         public void ExtractingANonBundleFails()
         {
             var fixture = sharedTestState.TestFixture
                 .Copy();
 
-            Extractor extractor = new Extractor(fixture.TestProject.AppExe, Directory.GetCurrentDirectory());
+            var hostName = GetHostName(fixture);
+            var hostExe = Path.Combine(GetPublishPath(fixture), hostName);
+
+            var bundleDir = GetBundleDir(fixture);
+            Extractor extractor = new Extractor(hostExe, "extract");
             Assert.Throws<BundleException>(() => extractor.ExtractFiles());
         }
 
+        [Fact]
         public void AllBundledFilesAreExtracted()
         {
             var fixture = sharedTestState.TestFixture
                 .Copy();
 
-            string publishDir = fixture.TestProject.OutputDirectory;
-            var hostName = Path.GetFileName(fixture.TestProject.AppExe);
-            var appName = Path.GetFileNameWithoutExtension(fixture.TestProject.AppExe);
+            var hostName = GetHostName(fixture);
+            var bundleDir = GetBundleDir(fixture);
 
-            var bundleDir = Directory.CreateDirectory(Path.Combine(fixture.TestProject.ProjectDirectory, "bundle"));
             var bundler = new Bundler(hostName, bundleDir.FullName);
-            string singleFile = bundler.GenerateBundle(publishDir);
+            string singleFile = bundler.GenerateBundle(GetPublishPath(fixture));
 
-            var bundledFiles = new List<string>(bundler.BundleManifest.Files.Count);
-            bundler.BundleManifest.Files.ForEach(file => bundledFiles.Add(file.RelativePath));
+            var expectedFiles = new List<string>(bundler.BundleManifest.Files.Count);
+            expectedFiles.Add(hostName);
+            bundler.BundleManifest.Files.ForEach(file => expectedFiles.Add(file.RelativePath));
 
-            // After extraction, bundleDir must have the same named files as pubilshDir. 
-            // In bundleDir, we have the single-file in place of the apphost, but they both have the same name.
             new Extractor(singleFile, bundleDir.FullName).ExtractFiles();
-            bundleDir.Should().OnlyHaveFiles(bundledFiles);
+            bundleDir.Should().OnlyHaveFiles(expectedFiles);
         }
-
 
         public class SharedTestState : IDisposable
         {
@@ -67,7 +83,7 @@ namespace Microsoft.NET.HostModel.Tests
                 TestFixture
                     .EnsureRestoredForRid(TestFixture.CurrentRid, RepoDirectories.CorehostPackages)
                     .PublishProject(runtime: TestFixture.CurrentRid,
-                                    outputDirectory: Path.Combine(TestFixture.TestProject.ProjectDirectory, "publish"));
+                                    outputDirectory: GetPublishPath(TestFixture));
             }
 
             public void Dispose()

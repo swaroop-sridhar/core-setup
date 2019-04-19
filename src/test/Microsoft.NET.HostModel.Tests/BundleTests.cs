@@ -20,14 +20,30 @@ namespace Microsoft.NET.HostModel.Tests
             sharedTestState = fixture;
         }
 
+        private static string GetHostName(TestProjectFixture fixture)
+        {
+            return Path.GetFileName(fixture.TestProject.AppExe);
+        }
+
+        private static string GetPublishPath(TestProjectFixture fixture)
+        {
+            return Path.Combine(fixture.TestProject.ProjectDirectory, "publish");
+        }
+
+        private static DirectoryInfo GetBundleDir(TestProjectFixture fixture)
+        {
+            return Directory.CreateDirectory(Path.Combine(fixture.TestProject.ProjectDirectory, "bundle"));
+        }
+
         [Fact]
         public void TestWithEmptySpecFails()
         {
             var fixture = sharedTestState.TestFixture
                 .Copy();
 
-            var hostName = Path.GetFileName(fixture.TestProject.AppExe);
-            Bundler bundler = new Bundler(hostName, "bundle");
+            var hostName = GetHostName(fixture);
+            var bundleDir = GetBundleDir(fixture);
+            Bundler bundler = new Bundler(hostName, bundleDir.FullName);
 
             FileSpec[][] invalidSpecs =
             {
@@ -48,45 +64,20 @@ namespace Microsoft.NET.HostModel.Tests
             var fixture = sharedTestState.TestFixture
                 .Copy();
 
-            string publishDir = fixture.TestProject.OutputDirectory;
-            var hostName = Path.GetFileName(fixture.TestProject.AppExe);
-            var appName = Path.GetFileNameWithoutExtension(fixture.TestProject.AppExe);
+            var hostName = GetHostName(fixture);
+            var appName = Path.GetFileNameWithoutExtension(hostName);
+            string publishPath = GetPublishPath(fixture);
+            var bundleDir = GetBundleDir(fixture);
 
             // Generate a file specification without the apphost
             var fileSpecs = new List<FileSpec>();
             string[] files = { $"{appName}.dll", $"{appName}.deps.json", $"{appName}.runtimeconfig.json" };
             Array.ForEach(files, x => fileSpecs.Add(new FileSpec(x, x)));
 
-            Bundler bundler = new Bundler(hostName, "bundle");
+            Bundler bundler = new Bundler(hostName, bundleDir.FullName);
+
             Assert.Throws<ArgumentException>(() => bundler.GenerateBundle(fileSpecs));
         }
-
-        [InlineData(true)]
-        [InlineData(false)]
-        [Theory]
-        public void TestFilesInOutputDir(bool embedPDBs)
-        {
-            var fixture = sharedTestState.TestFixture
-                .Copy();
-
-            string publishDir = fixture.TestProject.OutputDirectory;
-            var hostName = Path.GetFileName(fixture.TestProject.AppExe);
-            var appName = Path.GetFileNameWithoutExtension(fixture.TestProject.AppExe);
-            var bundleDir = Directory.CreateDirectory(Path.Combine(fixture.TestProject.ProjectDirectory, "bundle"));
-
-            new Bundler(hostName, bundleDir.FullName, embedPDBs).GenerateBundle(publishDir);
-
-            var expectedFiles = new List<string>(2);
-            expectedFiles.Add(hostName);
-
-            if(!embedPDBs)
-            {
-                expectedFiles.Add($"{appName}.pdb");
-            }
-
-            bundleDir.Should().OnlyHaveFiles(expectedFiles);
-        }
-
 
         [InlineData(true)]
         [InlineData(false)]
@@ -96,20 +87,22 @@ namespace Microsoft.NET.HostModel.Tests
             var fixture = sharedTestState.TestFixture
                 .Copy();
 
-            string publishDir = fixture.TestProject.OutputDirectory;
-            var hostName = Path.GetFileName(fixture.TestProject.AppExe);
-            var appName = Path.GetFileNameWithoutExtension(fixture.TestProject.AppExe);
-            var bundleDir = Directory.CreateDirectory(Path.Combine(fixture.TestProject.ProjectDirectory, "bundle"));
-
+            var hostName = GetHostName(fixture);
+            var appName = Path.GetFileNameWithoutExtension(hostName);
+            string publishPath = GetPublishPath(fixture);
+            var bundleDir = GetBundleDir(fixture);
+            
             // Make up a app.runtimeconfig.dev.json file in the publish directory.
-            File.Copy(Path.Combine(publishDir, $"{appName}.runtimeconfig.json"), 
-                      Path.Combine(publishDir, $"{appName}.runtimeconfig.dev.json"));
+            File.Copy(Path.Combine(publishPath, $"{appName}.runtimeconfig.json"), 
+                      Path.Combine(publishPath, $"{appName}.runtimeconfig.dev.json"));
 
-            var singleFile = new Bundler(hostName, bundleDir.FullName, embedPDBs).GenerateBundle(publishDir);
+            var singleFile = new Bundler(hostName, bundleDir.FullName, embedPDBs).GenerateBundle(publishPath);
+
+            bundleDir.Should().OnlyHaveFiles(new string[] { hostName });
+
             new Extractor(singleFile, bundleDir.FullName).ExtractFiles();
 
             bundleDir.Should().NotHaveFile($"{appName}.runtimeconfig.dev.json");
-
             if (!embedPDBs)
             {
                 bundleDir.Should().NotHaveFile($"{appName}.pdb");
@@ -129,12 +122,12 @@ namespace Microsoft.NET.HostModel.Tests
                 TestFixture
                     .EnsureRestoredForRid(TestFixture.CurrentRid, RepoDirectories.CorehostPackages)
                     .PublishProject(runtime: TestFixture.CurrentRid,
-                                    outputDirectory: Path.Combine(TestFixture.TestProject.ProjectDirectory, "publish"));
+                                    outputDirectory: GetPublishPath(TestFixture));
             }
 
             public void Dispose()
             {
-                TestFixture.Dispose();
+                // TestFixture.Dispose();
             }
         }
     }
