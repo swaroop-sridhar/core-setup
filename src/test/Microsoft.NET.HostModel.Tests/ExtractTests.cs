@@ -16,7 +16,7 @@ namespace Microsoft.NET.HostModel.Tests
     {
         private SharedTestState sharedTestState;
 
-        public ExtractTests(ExtractTests.SharedTestState fixture)
+        public ExtractTests(SharedTestState fixture)
         {
             sharedTestState = fixture;
         }

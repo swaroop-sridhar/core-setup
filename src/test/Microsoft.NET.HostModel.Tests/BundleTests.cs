@@ -15,7 +15,7 @@ namespace Microsoft.NET.HostModel.Tests
     {
         private SharedTestState sharedTestState;
 
-        public BundleTests(BundleTests.SharedTestState fixture)
+        public BundleTests(SharedTestState fixture)
         {
             sharedTestState = fixture;
         }
