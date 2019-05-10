@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 #include "bundle_runner.h"
+#include "bundle_util.h"
 #include "pal.h"
 #include "error_codes.h"
 #include "trace.h"
@@ -21,7 +22,7 @@ file_entry_t* file_entry_t::read(FILE* stream)
     file_entry_t* entry = new file_entry_t();
 
     // First read the fixed-sized portion of file-entry
-    bundle_runner_t::read(&entry->m_data, sizeof(entry->m_data), stream);
+	bundle_util_t::read(&entry->m_data, sizeof(entry->m_data), stream);
     if (!entry->is_valid())
     {
         trace::error(_X("Failure processing application bundle; possible file corruption."));
@@ -30,11 +31,11 @@ file_entry_t* file_entry_t::read(FILE* stream)
     }
 
     size_t path_length =
-        bundle_runner_t::get_path_length(entry->m_data.path_length_byte_1, stream);
+		bundle_util_t::get_path_length(entry->m_data.path_length_byte_1, stream);
 
     // Read the relative-path, given its length 
     pal::string_t& path = entry->m_relative_path;
-    bundle_runner_t::read_string(path, path_length, stream);
+	bundle_util_t::read_string(path, path_length, stream);
 
     // Fixup the relative-path to have current platform's directory separator.
     if (bundle_dir_separator != DIR_SEPARATOR)

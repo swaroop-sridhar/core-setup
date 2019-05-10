@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 #include "bundle_runner.h"
+#include "bundle_util.h"
 #include "pal.h"
 #include "error_codes.h"
 #include "trace.h"
@@ -22,7 +23,7 @@ manifest_header_t* manifest_header_t::read(FILE* stream)
     manifest_header_t* header = new manifest_header_t();
 
     // First read the fixed size portion of the header
-    bundle_runner_t::read(&header->m_data, sizeof(header->m_data), stream);
+	bundle_util_t::read(&header->m_data, sizeof(header->m_data), stream);
     if (!header->is_valid())
     {
         trace::error(_X("Failure processing application bundle."));
@@ -33,10 +34,10 @@ manifest_header_t* manifest_header_t::read(FILE* stream)
 
     // bundle_id is a component of the extraction path
     size_t bundle_id_length = 
-        bundle_runner_t::get_path_length(header->m_data.bundle_id_length_byte_1, stream);
+		bundle_util_t::get_path_length(header->m_data.bundle_id_length_byte_1, stream);
      
     // Next read the bundle-ID string, given its length
-    bundle_runner_t::read_string(header->m_bundle_id, bundle_id_length, stream);
+	bundle_util_t::read_string(header->m_bundle_id, bundle_id_length, stream);
 
     return header;
 }
@@ -54,7 +55,7 @@ manifest_footer_t* manifest_footer_t::read(FILE* stream)
 {
     manifest_footer_t* footer = new manifest_footer_t();
 
-    bundle_runner_t::read(footer, num_bytes_read(), stream);
+	bundle_util_t::read(footer, num_bytes_read(), stream);
 
     if (!footer->is_valid())
     {
