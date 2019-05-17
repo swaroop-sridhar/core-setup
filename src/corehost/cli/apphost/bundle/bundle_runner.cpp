@@ -10,6 +10,18 @@
 
 using namespace bundle;
 
+void bundle_runner_t::map_host()
+{
+	bundle_map = (int8_t *) pal::map_file_readonly(m_bundle_path, bundle_length);
+
+	if (bundle_map == nullptr)
+	{
+		trace::error(_X("Failure processing application bundle."));
+		trace::error(_X("Couldn't memory map the bundle file for reading"));
+		throw StatusCode::BundleExtractionIOError;
+	}
+}
+
 void bundle_runner_t::process_manifest_footer(int64_t &header_offset)
 {
     bundle_util_t::seek(m_bundle_stream, -manifest_footer_t::num_bytes_read(), SEEK_END);
@@ -136,9 +148,9 @@ StatusCode bundle_runner_t::extract()
     try
     {
         // Determine if the current executable is a bundle
-        reopen_host_for_reading();
+		map_host();
 
-        //  If the current AppHost is a bundle, it's layout will be 
+		//  If the current AppHost is a bundle, it's layout will be 
         //    AppHost binary 
         //    Embedded Files: including the app, its configuration files, 
         //                    dependencies, and possibly the runtime.
@@ -199,6 +211,7 @@ StatusCode bundle_runner_t::extract()
         }
 
         fclose(m_bundle_stream);
+
         return StatusCode::Success;
     }
     catch (StatusCode e)
@@ -206,4 +219,7 @@ StatusCode bundle_runner_t::extract()
         fclose(m_bundle_stream);
         return e;
     }
+
+
+
 }

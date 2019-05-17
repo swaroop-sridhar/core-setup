@@ -23,6 +23,7 @@ set(SOURCES
     ./bundle/file_entry.cpp
     ./bundle/manifest.cpp
     ./bundle/bundle_runner.cpp
+    ./bundle/bundle_util.cpp
 )
 
 set(HEADERS

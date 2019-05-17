@@ -5,7 +5,6 @@
 #ifndef __MANIFEST_H__
 #define __MANIFEST_H__
 
-#include <cstdint>
 #include <list>
 #include "file_entry.h"
 

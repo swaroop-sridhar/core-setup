@@ -3,9 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 #include "bundle_util.h"
-#include "pal.h"
-#include "trace.h"
-#include "utils.h"
+#include "error_codes.h"
 
 using namespace bundle;
 

@@ -5,7 +5,6 @@
 #ifndef __FILE_ENTRY_H__
 #define __FILE_ENTRY_H__
 
-#include <cstdint>
 #include "file_type.h"
 #include "pal.h"
 

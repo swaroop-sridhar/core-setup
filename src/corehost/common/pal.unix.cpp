@@ -47,7 +47,7 @@ pal::string_t pal::get_timestamp()
 
 bool pal::touch_file(const pal::string_t& path)
 {
-    int fd = open(path.c_str(), (O_CREAT | O_EXCL), (S_IRUSR | S_IRGRP | S_IROTH));
+    int fd = open(path.c_str(), O_RDONLY, (S_IRUSR | S_IRGRP | S_IROTH));
     if (fd == -1)
     {
         trace::warning(_X("open(%s) failed in %s"), path.c_str(), _STRINGIFY(__FUNCTION__));
@@ -55,6 +55,36 @@ bool pal::touch_file(const pal::string_t& path)
     }
     (void) close(fd);
     return true;
+}
+
+void* pal::map_file_readonly(const pal::string_t& path, size_t& length)
+{
+	int fd = open(path.c_str(), (O_CREAT | O_EXCL), (S_IRUSR | S_IRGRP | S_IROTH));
+	if (fd == -1)
+	{
+		trace::warning(_X("Failed to map file. open(%s) failed with error %d"), path.c_str(), errno);
+		return nullptr;
+	}
+
+	struct stat buf;
+	if (fstat(fd, &buf) != 0)
+	{
+		trace::warning(_X("Failed to map file. fstat(%s) failed with error %d"), path.c_str(), errno);
+		return nullptr;
+	}
+
+	length = buf.st_size;
+	void* address = mmap(nullptr, , PROT_READ, MAP_SHARED, fd, 0);
+
+	if(address == nullptr)
+	{
+		trace::warning(_X("Failed to map file. mmap(%s) failed with error %d"), path.c_str(), errno);
+		return nullptr;
+	}
+
+	close(fd);
+	
+	return address;
 }
 
 bool pal::getcwd(pal::string_t* recv)
