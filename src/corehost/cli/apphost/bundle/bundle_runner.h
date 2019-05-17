@@ -5,8 +5,6 @@
 #ifndef __BUNDLE_RUNNER_H__
 #define __BUNDLE_RUNNER_H__
 
-
-#include <cstdint>
 #include "manifest.h"
 #include "error_codes.h"
 
@@ -31,7 +29,7 @@ namespace bundle
         StatusCode extract();
 
     private:
-        void reopen_host_for_reading();
+		void map_host();
 
         void process_manifest_footer(int64_t& header_offset);
         void process_manifest_header(int64_t header_offset);
@@ -50,6 +48,9 @@ namespace bundle
         pal::string_t m_bundle_id;
         pal::string_t m_extraction_dir;
         pal::string_t m_working_extraction_dir;
+		int8_t* bundle_map;
+		size_t bundle_length;
+
     };
 
 }

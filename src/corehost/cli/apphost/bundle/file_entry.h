@@ -5,7 +5,6 @@
 #ifndef __FILE_ENTRY_H__
 #define __FILE_ENTRY_H__
 
-#include <cstdint>
 #include "file_type.h"
 #include "pal.h"
 
@@ -36,7 +35,6 @@ namespace bundle
             int64_t offset;
             int64_t size;
             file_type_t type;
-            int8_t path_length_byte_1;
         } m_data;
 #pragma pack(pop)
 
@@ -53,7 +51,7 @@ namespace bundle
         int64_t size() { return m_data.size; }
         file_type_t type() { return m_data.type; }
 
-        static file_entry_t* read(FILE* stream);
+        static file_entry_t* read(int8_t* ptr);
 
     private:
         static const pal::char_t bundle_dir_separator = '/';

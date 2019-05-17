@@ -5,7 +5,6 @@
 #ifndef __MANIFEST_H__
 #define __MANIFEST_H__
 
-#include <cstdint>
 #include <list>
 #include "file_entry.h"
 
@@ -29,7 +28,7 @@ namespace bundle
         }
 
         bool is_valid();
-        static manifest_header_t* read(FILE* stream);
+        static manifest_header_t* read(int8_t* ptr);
         const pal::string_t& bundle_id() { return m_bundle_id; }
         int32_t num_embedded_files() { return m_data.num_embedded_files;  }
 
@@ -40,7 +39,6 @@ namespace bundle
             uint32_t major_version;
             uint32_t minor_version;
             int32_t num_embedded_files;
-            int8_t bundle_id_length_byte_1;
         } m_data;
 #pragma pack(pop)
         pal::string_t m_bundle_id;
@@ -58,23 +56,16 @@ namespace bundle
         manifest_footer_t()
             :m_header_offset(0), m_signature_length(0)
         {
-            // The signature string is not null-terminated as read from disk.
-            // We add an additional character for null termination
-            m_signature[14] = 0;
         }
 
         bool is_valid();
-        static manifest_footer_t* read(FILE* stream);
+        static manifest_footer_t* read(int8_t* ptr);
         int64_t manifest_header_offset() { return m_header_offset; }
-        static size_t num_bytes_read()
-        {
-            return sizeof(manifest_footer_t) - 1;
-        }
 
     private:
         int64_t m_header_offset;
         uint8_t m_signature_length;
-        char m_signature[15];
+        char m_signature[14];
 
     private:
 
@@ -95,7 +86,7 @@ namespace bundle
 
         std::list<file_entry_t*> files;
 
-        static manifest_t* read(FILE* host, int32_t num_files);
+        static manifest_t* read(int8_t* ptr, int32_t num_files);
     };
 }
 #endif // __MANIFEST_H__

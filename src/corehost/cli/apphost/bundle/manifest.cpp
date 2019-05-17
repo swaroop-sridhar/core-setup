@@ -18,7 +18,7 @@ bool manifest_header_t::is_valid()
            m_data.num_embedded_files > 0;
 }
 
-manifest_header_t* manifest_header_t::read(FILE* stream)
+manifest_header_t* manifest_header_t::read(int *ptr)
 {
     manifest_header_t* header = new manifest_header_t();
 
@@ -32,10 +32,6 @@ manifest_header_t* manifest_header_t::read(FILE* stream)
         throw StatusCode::BundleExtractionFailure;
     }
 
-    // bundle_id is a component of the extraction path
-    size_t bundle_id_length = 
-		bundle_util_t::get_path_length(header->m_data.bundle_id_length_byte_1, stream);
-     
     // Next read the bundle-ID string, given its length
 	bundle_util_t::read_string(header->m_bundle_id, bundle_id_length, stream);
 
@@ -48,14 +44,12 @@ bool manifest_footer_t::is_valid()
 {
     return m_header_offset > 0 &&
         m_signature_length == 14 &&
-        strcmp(m_signature, m_expected_signature) == 0;
+        strncmp(m_signature, m_expected_signature, m_signature_length) == 0;
 }
 
-manifest_footer_t* manifest_footer_t::read(FILE* stream)
+manifest_footer_t* manifest_footer_t::read(int8_t *ptr)
 {
-    manifest_footer_t* footer = new manifest_footer_t();
-
-	bundle_util_t::read(footer, num_bytes_read(), stream);
+	manifest_footer_t* footer = (manifest_footer_t*)ptr;
 
     if (!footer->is_valid())
     {

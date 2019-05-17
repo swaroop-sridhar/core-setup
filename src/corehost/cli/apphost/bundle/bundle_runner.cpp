@@ -10,19 +10,34 @@
 
 using namespace bundle;
 
+void bundle_runner_t::map_host()
+{
+	bundle_map = (int8_t *) pal::map_file_readonly(m_bundle_path, bundle_length);
+
+	if (bundle_map == nullptr)
+	{
+		trace::error(_X("Failure processing application bundle."));
+		trace::error(_X("Couldn't memory map the bundle file for reading"));
+		throw StatusCode::BundleExtractionIOError;
+	}
+}
+
 void bundle_runner_t::process_manifest_footer(int64_t &header_offset)
 {
-    bundle_util_t::seek(m_bundle_stream, -manifest_footer_t::num_bytes_read(), SEEK_END);
+	manifest_footer_t* footer = manifest_footer_t::read(bundle_map + bundle_length - sizeof(manifest_footer_t));
 
-    manifest_footer_t* footer = manifest_footer_t::read(m_bundle_stream);
+	if (!footer->is_valid())
+	{
+		trace::info(_X("This executable is not recognized as a bundle."));
+		throw StatusCode::AppHostExeNotBundle;
+	}
+
     header_offset = footer->manifest_header_offset();
 }
 
 void bundle_runner_t::process_manifest_header(int64_t header_offset)
 {
-	bundle_util_t::seek(m_bundle_stream, header_offset, SEEK_SET);
-
-    manifest_header_t* header = manifest_header_t::read(m_bundle_stream);
+    manifest_header_t* header = manifest_header_t::read(bundle_map + header_offset);
 
     m_num_embedded_files = header->num_embedded_files();
     m_bundle_id = header->bundle_id();
@@ -136,9 +151,9 @@ StatusCode bundle_runner_t::extract()
     try
     {
         // Determine if the current executable is a bundle
-        reopen_host_for_reading();
+		map_host();
 
-        //  If the current AppHost is a bundle, it's layout will be 
+		//  If the current AppHost is a bundle, it's layout will be 
         //    AppHost binary 
         //    Embedded Files: including the app, its configuration files, 
         //                    dependencies, and possibly the runtime.
@@ -199,6 +214,7 @@ StatusCode bundle_runner_t::extract()
         }
 
         fclose(m_bundle_stream);
+
         return StatusCode::Success;
     }
     catch (StatusCode e)
@@ -206,4 +222,7 @@ StatusCode bundle_runner_t::extract()
         fclose(m_bundle_stream);
         return e;
     }
+
+
+
 }

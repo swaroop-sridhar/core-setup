@@ -3,48 +3,17 @@
 // See the LICENSE file in the project root for more information.
 
 #include "bundle_util.h"
-#include "pal.h"
-#include "trace.h"
-#include "utils.h"
+#include "error_codes.h"
 
 using namespace bundle;
 
-void bundle_util_t::seek(FILE* stream, long offset, int origin)
-{
-    if (fseek(stream, offset, origin) != 0)
-    {
-        trace::error(_X("Failure processing application bundle; possible file corruption."));
-        trace::error(_X("I/O seek failure within the bundle."));
-        throw StatusCode::BundleExtractionIOError;
-    }
-}
-
-void bundle_util_t::write(const void* buf, size_t size, FILE *stream)
-{
-    if (fwrite(buf, 1, size, stream) != size)
-    {
-        trace::error(_X("Failure extracting contents of the application bundle."));
-        trace::error(_X("I/O failure when writing extracted files."));
-        throw StatusCode::BundleExtractionIOError;
-    }
-}
-
-void bundle_util_t::read(void* buf, size_t size, FILE* stream)
-{
-    if (fread(buf, 1, size, stream) != size)
-    {
-        trace::error(_X("Failure processing application bundle; possible file corruption."));
-        trace::error(_X("I/O failure reading contents of the bundle."));
-        throw StatusCode::BundleExtractionIOError;
-    }
-}
-
 // Handle the relatively uncommon scenario where the bundle ID or 
 // the relative-path of a file within the bundle is longer than 127 bytes
-size_t bundle_util_t::get_path_length(int8_t first_byte, FILE* stream)
+size_t bundle_util_t::get_path_length(int8_t **pptr)
 {
     size_t length = 0;
 
+	int8_t first_byte = *((*pptr)++);
     // If the high bit is set, it means there are more bytes to read.
     if ((first_byte & 0x80) == 0)
     {
@@ -52,8 +21,7 @@ size_t bundle_util_t::get_path_length(int8_t first_byte, FILE* stream)
     }
     else
     {
-        int8_t second_byte = 0;
-        read(&second_byte, 1, stream);
+        int8_t second_byte = *((*pptr)++);
 
         if (second_byte & 0x80)
         {
@@ -77,13 +45,13 @@ size_t bundle_util_t::get_path_length(int8_t first_byte, FILE* stream)
     return length;
 }
 
-// Read a non-null terminated fixed length UTF8 string from a byte-stream
-// and transform it to pal::string_t
-void bundle_util_t::read_string(pal::string_t &str, size_t size, FILE* stream)
+void bundle_util_t::read_path_string(pal::string_t &str, int8_t **pptr)
 {
-    uint8_t *buffer = new uint8_t[size + 1]; 
-    read(buffer, size, stream);
-    buffer[size] = 0; // null-terminator
+	size_t length = get_path_length(pptr);
+    uint8_t *buffer = new uint8_t[length + 1];
+	memcpy(buffer, *pptr, length);
+	*pptr += length;
+    buffer[length] = 0; // null-terminator
     pal::clr_palstring(reinterpret_cast<const char*>(buffer), &str);
 }
 
