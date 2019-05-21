@@ -11,36 +11,38 @@
 namespace bundle
 {
     // Manifest Header contains:
-    // Fixed size thunk (represened by manifest_header_inner_t)
+    // Fixed size thunk (represened by manifest_header_fixed_t)
     //   - Major Version     
     //   - Minor Version     
     //   - Number of embedded files
-    //   - Bundle ID length 
-    // Variable size portion:
+	// Variable size portion:
+	//   - Bundle ID length 
     //   - Bundle ID ("Bundle ID length" bytes)
+
+#pragma pack(push, 1)
+	struct manifest_header_fixed_t
+	{
+		uint32_t major_version;
+		uint32_t minor_version;
+		int32_t num_embedded_files;
+	};
+#pragma pack(pop)
 
     struct manifest_header_t
     {
     public:
         manifest_header_t()
-            :m_data(), m_bundle_id()
+            :m_data(nullptr), m_bundle_id()
         {
         }
 
         bool is_valid();
         static manifest_header_t* read(int8_t* ptr);
         const pal::string_t& bundle_id() { return m_bundle_id; }
-        int32_t num_embedded_files() { return m_data.num_embedded_files;  }
+        int32_t num_embedded_files() { return m_data->num_embedded_files;  }
 
     private:
-#pragma pack(push, 1)
-        struct
-        {
-            uint32_t major_version;
-            uint32_t minor_version;
-            int32_t num_embedded_files;
-        } m_data;
-#pragma pack(pop)
+		manifest_header_fixed_t* m_data;
         pal::string_t m_bundle_id;
 
         static const uint32_t m_current_major_version = 0;

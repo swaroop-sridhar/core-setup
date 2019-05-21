@@ -19,42 +19,41 @@ namespace bundle
     //   - Offset     
     //   - Size       
     //   - File Entry Type       
-    //   - path-length  (7-bit extension encoding, 1 Byte due to MAX_PATH)
     // Variable Size portion
-    //   - relative path  ("path-length" Bytes)
+	//   - path-length    (7-bit extension encoding)
+	//   - relative path  ("path-length" Bytes)
+
+#pragma pack(push, 1)
+	struct
+	{
+		int64_t offset;
+		int64_t size;
+		file_type_t type;
+	} file_entry_fixed_t;
+#pragma pack(pop)
+
 
     class file_entry_t
     {
-    private:
-
-        // The inner structure represents the fields that can be 
-        // read contiguously for every file_entry. 
-#pragma pack(push, 1)
-        struct
-        {
-            int64_t offset;
-            int64_t size;
-            file_type_t type;
-        } m_data;
-#pragma pack(pop)
-
-        pal::string_t m_relative_path; // Path of an embedded file, relative to the extraction directory.
-
     public:
         file_entry_t()
-            :m_data(), m_relative_path()
+            :m_relative_path()
         {
         }
 
         const pal::string_t& relative_path() { return m_relative_path; }
-        int64_t offset() { return m_data.offset; }
-        int64_t size() { return m_data.size; }
-        file_type_t type() { return m_data.type; }
+        int64_t offset() { return m_offset; }
+        int64_t size() { return m_size; }
+        file_type_t type() { return m_type; }
 
         static file_entry_t* read(int8_t* ptr);
 
     private:
-        static const pal::char_t bundle_dir_separator = '/';
+		int64_t m_offset;
+		int64_t m_size;
+		file_type_t m_type;
+		pal::string_t m_relative_path; // Path of an embedded file, relative to the extraction directory.
+		static const pal::char_t bundle_dir_separator = '/';
         bool is_valid();
     };
 }
