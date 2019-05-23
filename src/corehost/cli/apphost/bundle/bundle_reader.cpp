@@ -9,7 +9,7 @@ using namespace bundle;
 
 // Handle the relatively uncommon scenario where the bundle ID or 
 // the relative-path of a file within the bundle is longer than 127 bytes
-size_t bundle_util_t::get_path_length()
+size_t bundle_reader_t::read_path_length()
 {
     size_t length = 0;
 
@@ -45,9 +45,9 @@ size_t bundle_util_t::get_path_length()
     return length;
 }
 
-void bundle_util_t::read_path_string(pal::string_t &str)
+void bundle_reader_t::read_path_string(pal::string_t &str)
 {
-	size_t length = get_path_length();
+	size_t length = read_path_length();
     int8_t *buffer = new int8_t[length + 1];
 	read(buffer, length);
     buffer[length] = 0; // null-terminator

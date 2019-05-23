@@ -6,7 +6,7 @@
 #define __FILE_ENTRY_H__
 
 #include "file_type.h"
-#include "pal.h"
+#include "bundle_reader.h"
 
 namespace bundle
 {
@@ -35,12 +35,12 @@ namespace bundle
     class file_entry_t
     {
     public:
-		file_entry_t(file_entry_fixed_t &fixed_data)
+		file_entry_t(file_entry_fixed_t *fixed_data)
 			:m_relative_path()
 		{
-			m_offset = fixed_data.offset;
-			m_size = fixed_data.size;
-			m_type = fixed_data.type;
+			m_offset = fixed_data->offset;
+			m_size = fixed_data->size;
+			m_type = fixed_data->type;
 		}
 
         const pal::string_t& relative_path() { return m_relative_path; }

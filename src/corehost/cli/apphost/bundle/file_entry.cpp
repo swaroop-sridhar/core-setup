@@ -20,8 +20,9 @@ bool file_entry_t::is_valid()
 file_entry_t* file_entry_t::read(bundle_reader_t &reader)
 {
 	// First read the fixed-sized portion of file-entry
-	file_entry_fixed_t* fixed_data = (file_entry_fixed_t*)reader.direct_read(sizeof(file_entry_fixed_t));
-    file_entry_t* entry = new file_entry_t(fixed_data);
+	const void* fixed_data;
+	reader.direct_read(fixed_data, sizeof(file_entry_fixed_t));
+    file_entry_t* entry = new file_entry_t((file_entry_fixed_t *) fixed_data);
 
     if (!entry->is_valid())
     {
