@@ -2,8 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#include "bundle_runner.h"
-#include "bundle_util.h"
+#include "runner.h"
+#include "util.h"
 #include "pal.h"
 #include "error_codes.h"
 #include "trace.h"
@@ -17,7 +17,7 @@ bool file_entry_t::is_valid()
         static_cast<file_type_t>(m_type) < file_type_t::__last;
 }
 
-file_entry_t* file_entry_t::read(bundle_reader_t &reader)
+file_entry_t* file_entry_t::read(reader_t &reader)
 {
     // First read the fixed-sized portion of file-entry
     const void* fixed_data;

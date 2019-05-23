@@ -2,8 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#include "bundle_runner.h"
-#include "bundle_util.h"
+#include "runner.h"
+#include "util.h"
 #include "pal.h"
 #include "error_codes.h"
 #include "trace.h"
@@ -18,7 +18,7 @@ bool manifest_header_t::is_valid()
            m_data->num_embedded_files > 0;
 }
 
-manifest_header_t* manifest_header_t::read(bundle_reader_t &reader)
+manifest_header_t* manifest_header_t::read(reader_t &reader)
 {
     manifest_header_t* header = new manifest_header_t();
 
@@ -36,7 +36,7 @@ manifest_header_t* manifest_header_t::read(bundle_reader_t &reader)
     }
 
     // Next read the bundle-ID string, given its length
-    reader.read_path_string(header->m_bundle_id);
+    reader.read_path_string(header->s_bundle_id);
 
     return header;
 }
@@ -50,7 +50,7 @@ bool manifest_footer_t::is_valid()
         strncmp(m_signature, m_expected_signature, m_signature_length) == 0;
 }
 
-manifest_footer_t* manifest_footer_t::read(bundle_reader_t &reader)
+manifest_footer_t* manifest_footer_t::read(reader_t &reader)
 {
     const void* data;
     reader.direct_read(data, sizeof(manifest_footer_t));
@@ -66,7 +66,7 @@ manifest_footer_t* manifest_footer_t::read(bundle_reader_t &reader)
     return footer;
 }
 
-manifest_t* manifest_t::read(bundle_reader_t& reader, int32_t num_files)
+manifest_t* manifest_t::read(reader_t& reader, int32_t num_files)
 {
     manifest_t* manifest = new manifest_t();
 

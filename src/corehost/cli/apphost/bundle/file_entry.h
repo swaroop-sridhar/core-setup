@@ -6,7 +6,7 @@
 #define __FILE_ENTRY_H__
 
 #include "file_type.h"
-#include "bundle_reader.h"
+#include "reader.h"
 
 namespace bundle
 {
@@ -48,7 +48,7 @@ namespace bundle
         int64_t size() { return m_size; }
         file_type_t type() { return m_type; }
 
-        static file_entry_t* read(bundle_reader_t &reader);
+        static file_entry_t* read(reader_t &reader);
 
     private:
         int64_t m_offset;

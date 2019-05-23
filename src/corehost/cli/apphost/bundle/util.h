@@ -2,18 +2,18 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#ifndef __BUNDLE_UTIL_H__
-#define __BUNDLE_UTIL_H__
+#ifndef __UTIL_H__
+#define __UTIL_H__
 
 #include <cstdint>
 #include "pal.h"
 #include "trace.h"
 #include "utils.h"
-#include "bundle_reader.h"
+#include "reader.h"
 
 namespace bundle
 {
-    class bundle_util_t
+    class util_t
     {
     public:
         static bool has_dirs_in_path(const pal::string_t &path);
@@ -23,4 +23,4 @@ namespace bundle
     };
 }
 
-#endif // __BUNDLE_UTIL_H__
+#endif // __UTIL_H__

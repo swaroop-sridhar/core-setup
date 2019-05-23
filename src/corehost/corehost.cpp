@@ -11,7 +11,7 @@
 #include "utils.h"
 
 #if defined(FEATURE_APPHOST)
-#include "cli/apphost/bundle/bundle_runner.h"
+#include "cli/apphost/bundle/runner.h"
 
 #define CURHOST_TYPE    _X("apphost")
 #define CUREXE_PKG_VER  COMMON_HOST_PKG_VER
@@ -123,13 +123,13 @@ int exe_start(const int argc, const pal::char_t* argv[])
         requires_v2_hostfxr_interface = true;
     }
 
-    bundle::bundle_runner_t extractor(host_path);
-    StatusCode bundle_status = extractor.extract();
+    bundle::runner_t::bundle_path = host_path;
+    StatusCode bundle_status = bundle::runner_t::extract();
 
     switch (bundle_status)
     {
     case StatusCode::Success:
-        app_path.assign(extractor.get_extraction_dir());
+        app_path.assign(bundle::runner_t::extraction_path());
         break;
 
     case StatusCode::AppHostExeNotBundle:

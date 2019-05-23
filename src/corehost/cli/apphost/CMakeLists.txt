@@ -22,9 +22,10 @@ set(SOURCES
     ../fxr/fx_ver.cpp
     ./bundle/file_entry.cpp
     ./bundle/manifest.cpp
-    ./bundle/bundle_runner.cpp
-    ./bundle/bundle_reader.cpp
-    ./bundle/bundle_util.cpp
+    ./bundle/reader.cpp
+    ./bundle/extractor.cpp
+    ./bundle/runner.cpp
+    ./bundle/util.cpp
 )
 
 set(HEADERS
@@ -32,7 +33,10 @@ set(HEADERS
     ./bundle/file_type.h
     ./bundle/file_entry.h
     ./bundle/manifest.h
-    ./bundle/bundle_runner.h
+    ./bundle/reader.h
+    ./bundle/extractor.h
+    ./bundle/runner.h
+    ./bundle/util.h
 )
 
 include(../exe.cmake)
