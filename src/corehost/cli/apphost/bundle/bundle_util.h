@@ -9,18 +9,17 @@
 #include "pal.h"
 #include "trace.h"
 #include "utils.h"
+#include "bundle_reader.h"
 
 namespace bundle
 {
     static class bundle_util_t
     {
     public:
-		static size_t get_path_length(int8_t **pptr);
-		static void read_path_string(pal::string_t& str, int8_t** pptr);
-
-		static bool has_dirs_in_path(const pal::string_t& path);
-		static void remove_directory_tree(const pal::string_t& path);
-		static void create_directory_tree(const pal::string_t& path);
+		static bool has_dirs_in_path(const pal::string_t &path);
+		static void remove_directory_tree(const pal::string_t &path);
+		static void create_directory_tree(const pal::string_t &path);
+		static void write(const void* buf, size_t size, FILE* stream);
     };
 }
 

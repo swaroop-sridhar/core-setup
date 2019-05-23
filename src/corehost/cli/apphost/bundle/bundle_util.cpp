@@ -7,52 +7,14 @@
 
 using namespace bundle;
 
-// Handle the relatively uncommon scenario where the bundle ID or 
-// the relative-path of a file within the bundle is longer than 127 bytes
-size_t bundle_util_t::get_path_length(int8_t **pptr)
+void bundle_util_t::write(const void* buf, size_t size, FILE* stream)
 {
-    size_t length = 0;
-
-	int8_t first_byte = *((*pptr)++);
-    // If the high bit is set, it means there are more bytes to read.
-    if ((first_byte & 0x80) == 0)
-    {
-         length = first_byte;
-    }
-    else
-    {
-        int8_t second_byte = *((*pptr)++);
-
-        if (second_byte & 0x80)
-        {
-            // There can be no more than two bytes in path_length
-            trace::error(_X("Failure processing application bundle; possible file corruption."));
-            trace::error(_X("Path length encoding read beyond two bytes"));
-
-            throw StatusCode::BundleExtractionFailure;
-        }
-
-        length = (second_byte << 7) | (first_byte & 0x7f);
-    }
-
-    if (length <= 0 || length > PATH_MAX)
-    {
-        trace::error(_X("Failure processing application bundle; possible file corruption."));
-        trace::error(_X("Path length is zero or too long"));
-        throw StatusCode::BundleExtractionFailure;
-    }
-
-    return length;
-}
-
-void bundle_util_t::read_path_string(pal::string_t &str, int8_t **pptr)
-{
-	size_t length = get_path_length(pptr);
-    uint8_t *buffer = new uint8_t[length + 1];
-	memcpy(buffer, *pptr, length);
-	*pptr += length;
-    buffer[length] = 0; // null-terminator
-    pal::clr_palstring(reinterpret_cast<const char*>(buffer), &str);
+	if (fwrite(buf, 1, size, stream) != size)
+	{
+		trace::error(_X("Failure extracting contents of the application bundle."));
+		trace::error(_X("I/O failure when writing extracted files."));
+		throw StatusCode::BundleExtractionIOError;
+	}
 }
 
 bool bundle_util_t::has_dirs_in_path(const pal::string_t& path)

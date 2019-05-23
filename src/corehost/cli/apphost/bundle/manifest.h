@@ -37,7 +37,7 @@ namespace bundle
         }
 
         bool is_valid();
-        static manifest_header_t* read(int8_t* ptr);
+        static manifest_header_t* read(bundle_reader_t &reader);
         const pal::string_t& bundle_id() { return m_bundle_id; }
         int32_t num_embedded_files() { return m_data->num_embedded_files;  }
 
@@ -58,10 +58,11 @@ namespace bundle
         manifest_footer_t()
             :m_header_offset(0), m_signature_length(0)
         {
+			m_signature[0] = 0;
         }
 
         bool is_valid();
-        static manifest_footer_t* read(int8_t* ptr);
+        static manifest_footer_t* read(bundle_reader_t &reader);
         int64_t manifest_header_offset() { return m_header_offset; }
 
     private:
@@ -88,7 +89,7 @@ namespace bundle
 
         std::list<file_entry_t*> files;
 
-        static manifest_t* read(int8_t* ptr, int32_t num_files);
+        static manifest_t* read(bundle_reader_t &reader, int32_t num_files);
     };
 }
 #endif // __MANIFEST_H__

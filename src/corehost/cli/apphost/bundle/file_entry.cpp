@@ -13,16 +13,16 @@ using namespace bundle;
 
 bool file_entry_t::is_valid()
 {
-    return m_data.offset > 0 && m_data.size > 0 &&
-        static_cast<file_type_t>(m_data.type) < file_type_t::__last;
+    return m_offset > 0 && m_size > 0 &&
+        static_cast<file_type_t>(m_type) < file_type_t::__last;
 }
 
-file_entry_t* file_entry_t::read(FILE* stream)
+file_entry_t* file_entry_t::read(bundle_reader_t &reader)
 {
-    file_entry_t* entry = new file_entry_t();
+	// First read the fixed-sized portion of file-entry
+	file_entry_fixed_t* fixed_data = (file_entry_fixed_t*)reader.direct_read(sizeof(file_entry_fixed_t));
+    file_entry_t* entry = new file_entry_t(fixed_data);
 
-    // First read the fixed-sized portion of file-entry
-	bundle_util_t::read(&entry->m_data, sizeof(entry->m_data), stream);
     if (!entry->is_valid())
     {
         trace::error(_X("Failure processing application bundle; possible file corruption."));
@@ -30,12 +30,8 @@ file_entry_t* file_entry_t::read(FILE* stream)
         throw StatusCode::BundleExtractionFailure;
     }
 
-    size_t path_length =
-		bundle_util_t::get_path_length(entry->m_data.path_length_byte_1, stream);
-
-    // Read the relative-path, given its length 
-    pal::string_t& path = entry->m_relative_path;
-	bundle_util_t::read_string(path, path_length, stream);
+	pal::string_t &path = entry->m_relative_path;
+	reader.read_path_string(path);
 
     // Fixup the relative-path to have current platform's directory separator.
     if (bundle_dir_separator != DIR_SEPARATOR)

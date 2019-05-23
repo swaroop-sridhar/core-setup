@@ -12,9 +12,9 @@ using namespace bundle;
 
 void bundle_runner_t::map_host()
 {
-	bundle_map = (int8_t *) pal::map_file_readonly(m_bundle_path, bundle_length);
+	m_bundle_map = (int8_t *) pal::map_file_readonly(m_bundle_path, m_bundle_length);
 
-	if (bundle_map == nullptr)
+	if (m_bundle_map == nullptr)
 	{
 		trace::error(_X("Failure processing application bundle."));
 		trace::error(_X("Couldn't memory map the bundle file for reading"));
@@ -22,9 +22,10 @@ void bundle_runner_t::map_host()
 	}
 }
 
-void bundle_runner_t::process_manifest_footer(int64_t &header_offset)
+void bundle_runner_t::process_manifest_footer(bundle_reader_t &reader)
 {
-	manifest_footer_t* footer = manifest_footer_t::read(bundle_map + bundle_length - sizeof(manifest_footer_t));
+	reader += m_bundle_length - sizeof(manifest_footer_t);
+	manifest_footer_t* footer = manifest_footer_t::read(reader);
 
 	if (!footer->is_valid())
 	{
@@ -32,12 +33,12 @@ void bundle_runner_t::process_manifest_footer(int64_t &header_offset)
 		throw StatusCode::AppHostExeNotBundle;
 	}
 
-    header_offset = footer->manifest_header_offset();
+	reader.set_ptr(m_bundle_map + footer->manifest_header_offset());
 }
 
-void bundle_runner_t::process_manifest_header(int64_t header_offset)
+void bundle_runner_t::process_manifest_header(bundle_reader_t &reader)
 {
-    manifest_header_t* header = manifest_header_t::read(bundle_map + header_offset);
+    manifest_header_t* header = manifest_header_t::read(reader);
 
     m_num_embedded_files = header->num_embedded_files();
     m_bundle_id = header->bundle_id();
@@ -114,19 +115,9 @@ FILE* bundle_runner_t::create_extraction_file(const pal::string_t& relative_path
 void bundle_runner_t::extract_file(file_entry_t *entry)
 {
     FILE* file = create_extraction_file(entry->relative_path());
-    const int64_t buffer_size = 8 * 1024; // Copy the file in 8KB chunks
-    uint8_t buffer[buffer_size];
-    int64_t file_size = entry->size();
+	bundle_util_t::write(m_bundle_map + entry->offset(), entry->size(), file);
 
-	bundle_util_t::seek(m_bundle_stream, entry->offset(), SEEK_SET);
-    do {
-        int64_t copy_size = (file_size <= buffer_size) ? file_size : buffer_size;
-		bundle_util_t::read(buffer, copy_size, m_bundle_stream);
-		bundle_util_t::write(buffer, copy_size, file);
-        file_size -= copy_size;
-    } while (file_size > 0);
-
-    fclose(file);
+	fclose(file);
 }
 
 bool bundle_runner_t::can_reuse_extraction()
@@ -159,9 +150,9 @@ StatusCode bundle_runner_t::extract()
         //                    dependencies, and possibly the runtime.
         //    Bundle Manifest
 
-        int64_t manifest_header_offset;
-        process_manifest_footer(manifest_header_offset);
-        process_manifest_header(manifest_header_offset);
+		bundle_reader_t reader(m_bundle_map);
+        process_manifest_footer(reader);
+        process_manifest_header(reader);
 
         // Determine if embedded files are already extracted, and available for reuse
         determine_extraction_dir();
@@ -189,7 +180,7 @@ StatusCode bundle_runner_t::extract()
         
         create_working_extraction_dir();
 
-        m_manifest = manifest_t::read(m_bundle_stream, m_num_embedded_files);
+        m_manifest = manifest_t::read(reader, m_num_embedded_files);
 
         for (file_entry_t* entry : m_manifest->files) {
             extract_file(entry);
@@ -213,13 +204,10 @@ StatusCode bundle_runner_t::extract()
             throw StatusCode::BundleExtractionFailure;
         }
 
-        fclose(m_bundle_stream);
-
         return StatusCode::Success;
     }
     catch (StatusCode e)
     {
-        fclose(m_bundle_stream);
         return e;
     }
 

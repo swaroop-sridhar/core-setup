@@ -13,17 +13,17 @@ using namespace bundle;
 
 bool manifest_header_t::is_valid()
 {
-    return m_data.major_version == m_current_major_version &&
-           m_data.minor_version == m_current_minor_version &&
-           m_data.num_embedded_files > 0;
+    return m_data->major_version == m_current_major_version &&
+           m_data->minor_version == m_current_minor_version &&
+           m_data->num_embedded_files > 0;
 }
 
-manifest_header_t* manifest_header_t::read(int *ptr)
+manifest_header_t* manifest_header_t::read(bundle_reader_t &reader)
 {
     manifest_header_t* header = new manifest_header_t();
 
     // First read the fixed size portion of the header
-	bundle_util_t::read(&header->m_data, sizeof(header->m_data), stream);
+	header->m_data = (manifest_header_fixed_t*) reader.direct_read(sizeof(manifest_header_fixed_t));
     if (!header->is_valid())
     {
         trace::error(_X("Failure processing application bundle."));
@@ -33,7 +33,7 @@ manifest_header_t* manifest_header_t::read(int *ptr)
     }
 
     // Next read the bundle-ID string, given its length
-	bundle_util_t::read_string(header->m_bundle_id, bundle_id_length, stream);
+	bundle_util_t::read_path_string(header->m_bundle_id, reader);
 
     return header;
 }
@@ -47,9 +47,9 @@ bool manifest_footer_t::is_valid()
         strncmp(m_signature, m_expected_signature, m_signature_length) == 0;
 }
 
-manifest_footer_t* manifest_footer_t::read(int8_t *ptr)
+manifest_footer_t* manifest_footer_t::read(bundle_reader_t &reader)
 {
-	manifest_footer_t* footer = (manifest_footer_t*)ptr;
+	manifest_footer_t* footer = (manifest_footer_t*) reader.direct_read(sizeof(manifest_footer_t));
 
     if (!footer->is_valid())
     {
@@ -61,13 +61,13 @@ manifest_footer_t* manifest_footer_t::read(int8_t *ptr)
     return footer;
 }
 
-manifest_t* manifest_t::read(FILE* stream, int32_t num_files)
+manifest_t* manifest_t::read(bundle_reader_t& reader, int32_t num_files)
 {
     manifest_t* manifest = new manifest_t();
 
     for (int32_t i = 0; i < num_files; i++)
     {
-        file_entry_t* entry = file_entry_t::read(stream);
+        file_entry_t* entry = file_entry_t::read(reader);
         if (entry == nullptr)
         {
             return nullptr;

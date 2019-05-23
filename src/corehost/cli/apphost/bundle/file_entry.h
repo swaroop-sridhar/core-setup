@@ -24,29 +24,31 @@ namespace bundle
 	//   - relative path  ("path-length" Bytes)
 
 #pragma pack(push, 1)
-	struct
+	struct file_entry_fixed_t
 	{
 		int64_t offset;
 		int64_t size;
 		file_type_t type;
-	} file_entry_fixed_t;
+	};
 #pragma pack(pop)
-
 
     class file_entry_t
     {
     public:
-        file_entry_t()
-            :m_relative_path()
-        {
-        }
+		file_entry_t(file_entry_fixed_t &fixed_data)
+			:m_relative_path()
+		{
+			m_offset = fixed_data.offset;
+			m_size = fixed_data.size;
+			m_type = fixed_data.type;
+		}
 
         const pal::string_t& relative_path() { return m_relative_path; }
         int64_t offset() { return m_offset; }
         int64_t size() { return m_size; }
         file_type_t type() { return m_type; }
 
-        static file_entry_t* read(int8_t* ptr);
+        static file_entry_t* read(bundle_reader_t &reader);
 
     private:
 		int64_t m_offset;
