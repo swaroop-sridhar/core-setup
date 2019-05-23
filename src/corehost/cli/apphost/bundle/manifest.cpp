@@ -23,9 +23,9 @@ manifest_header_t* manifest_header_t::read(bundle_reader_t &reader)
     manifest_header_t* header = new manifest_header_t();
 
     // First read the fixed size portion of the header
-	const void* data;
-	reader.direct_read(data, sizeof(manifest_header_fixed_t));
-	header->m_data = (manifest_header_fixed_t*)data;
+    const void* data;
+    reader.direct_read(data, sizeof(manifest_header_fixed_t));
+    header->m_data = (manifest_header_fixed_t*)data;
 
     if (!header->is_valid())
     {
@@ -36,7 +36,7 @@ manifest_header_t* manifest_header_t::read(bundle_reader_t &reader)
     }
 
     // Next read the bundle-ID string, given its length
-	reader.read_path_string(header->m_bundle_id);
+    reader.read_path_string(header->m_bundle_id);
 
     return header;
 }
@@ -52,9 +52,9 @@ bool manifest_footer_t::is_valid()
 
 manifest_footer_t* manifest_footer_t::read(bundle_reader_t &reader)
 {
-	const void* data;
-	reader.direct_read(data, sizeof(manifest_footer_t));
-	manifest_footer_t* footer = (manifest_footer_t*)data;
+    const void* data;
+    reader.direct_read(data, sizeof(manifest_footer_t));
+    manifest_footer_t* footer = (manifest_footer_t*)data;
 
     if (!footer->is_valid())
     {

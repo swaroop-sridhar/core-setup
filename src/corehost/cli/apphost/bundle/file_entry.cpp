@@ -19,9 +19,9 @@ bool file_entry_t::is_valid()
 
 file_entry_t* file_entry_t::read(bundle_reader_t &reader)
 {
-	// First read the fixed-sized portion of file-entry
-	const void* fixed_data;
-	reader.direct_read(fixed_data, sizeof(file_entry_fixed_t));
+    // First read the fixed-sized portion of file-entry
+    const void* fixed_data;
+    reader.direct_read(fixed_data, sizeof(file_entry_fixed_t));
     file_entry_t* entry = new file_entry_t((file_entry_fixed_t *) fixed_data);
 
     if (!entry->is_valid())
@@ -31,8 +31,8 @@ file_entry_t* file_entry_t::read(bundle_reader_t &reader)
         throw StatusCode::BundleExtractionFailure;
     }
 
-	pal::string_t &path = entry->m_relative_path;
-	reader.read_path_string(path);
+    pal::string_t &path = entry->m_relative_path;
+    reader.read_path_string(path);
 
     // Fixup the relative-path to have current platform's directory separator.
     if (bundle_dir_separator != DIR_SEPARATOR)

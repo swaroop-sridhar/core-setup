@@ -16,10 +16,10 @@ namespace bundle
     class bundle_util_t
     {
     public:
-		static bool has_dirs_in_path(const pal::string_t &path);
-		static void remove_directory_tree(const pal::string_t &path);
-		static void create_directory_tree(const pal::string_t &path);
-		static void write(const void* buf, size_t size, FILE* stream);
+        static bool has_dirs_in_path(const pal::string_t &path);
+        static void remove_directory_tree(const pal::string_t &path);
+        static void create_directory_tree(const pal::string_t &path);
+        static void write(const void* buf, size_t size, FILE* stream);
     };
 }
 

@@ -12,28 +12,28 @@ using namespace bundle;
 
 void bundle_runner_t::map_host()
 {
-	m_bundle_map = (int8_t *) pal::map_file_readonly(m_bundle_path, m_bundle_length);
+    m_bundle_map = (int8_t *) pal::map_file_readonly(m_bundle_path, m_bundle_length);
 
-	if (m_bundle_map == nullptr)
-	{
-		trace::error(_X("Failure processing application bundle."));
-		trace::error(_X("Couldn't memory map the bundle file for reading"));
-		throw StatusCode::BundleExtractionIOError;
-	}
+    if (m_bundle_map == nullptr)
+    {
+        trace::error(_X("Failure processing application bundle."));
+        trace::error(_X("Couldn't memory map the bundle file for reading"));
+        throw StatusCode::BundleExtractionIOError;
+    }
 }
 
 void bundle_runner_t::process_manifest_footer(bundle_reader_t &reader)
 {
-	reader.set_offset(m_bundle_length - sizeof(manifest_footer_t));
-	manifest_footer_t* footer = manifest_footer_t::read(reader);
+    reader.set_offset(m_bundle_length - sizeof(manifest_footer_t));
+    manifest_footer_t* footer = manifest_footer_t::read(reader);
 
-	if (!footer->is_valid())
-	{
-		trace::info(_X("This executable is not recognized as a bundle."));
-		throw StatusCode::AppHostExeNotBundle;
-	}
+    if (!footer->is_valid())
+    {
+        trace::info(_X("This executable is not recognized as a bundle."));
+        throw StatusCode::AppHostExeNotBundle;
+    }
 
-	reader.set_offset(footer->manifest_header_offset());
+    reader.set_offset(footer->manifest_header_offset());
 }
 
 void bundle_runner_t::process_manifest_header(bundle_reader_t &reader)
@@ -81,7 +81,7 @@ void bundle_runner_t::create_working_extraction_dir()
     pal::snwprintf(pid, 32, _X("%x"), pal::get_pid());
     append_path(&m_working_extraction_dir, pid);
 
-	bundle_util_t::create_directory_tree(m_working_extraction_dir);
+    bundle_util_t::create_directory_tree(m_working_extraction_dir);
 
     trace::info(_X("Temporary directory used to extract bundled files is [%s]"), m_working_extraction_dir.c_str());
 }
@@ -96,7 +96,7 @@ FILE* bundle_runner_t::create_extraction_file(const pal::string_t& relative_path
     // so we only create sub-directories if relative_path contains directories
     if (bundle_util_t::has_dirs_in_path(relative_path))
     {
-		bundle_util_t::create_directory_tree(get_directory(file_path));
+        bundle_util_t::create_directory_tree(get_directory(file_path));
     }
 
     FILE* file = pal::file_open(file_path.c_str(), _X("wb"));
@@ -115,9 +115,9 @@ FILE* bundle_runner_t::create_extraction_file(const pal::string_t& relative_path
 void bundle_runner_t::extract_file(file_entry_t *entry)
 {
     FILE* file = create_extraction_file(entry->relative_path());
-	bundle_util_t::write(m_bundle_map + entry->offset(), entry->size(), file);
+    bundle_util_t::write(m_bundle_map + entry->offset(), entry->size(), file);
 
-	fclose(file);
+    fclose(file);
 }
 
 bool bundle_runner_t::can_reuse_extraction()
@@ -142,15 +142,15 @@ StatusCode bundle_runner_t::extract()
     try
     {
         // Determine if the current executable is a bundle
-		map_host();
+        map_host();
 
-		//  If the current AppHost is a bundle, it's layout will be 
+        //  If the current AppHost is a bundle, it's layout will be 
         //    AppHost binary 
         //    Embedded Files: including the app, its configuration files, 
         //                    dependencies, and possibly the runtime.
         //    Bundle Manifest
 
-		bundle_reader_t reader(m_bundle_map);
+        bundle_reader_t reader(m_bundle_map);
         process_manifest_footer(reader);
         process_manifest_header(reader);
 
@@ -195,7 +195,7 @@ StatusCode bundle_runner_t::extract()
 
                 trace::info(_X("Extraction completed by another process, aborting current extracion."));
 
-				bundle_util_t::remove_directory_tree(m_working_extraction_dir);
+                bundle_util_t::remove_directory_tree(m_working_extraction_dir);
                 return StatusCode::Success;
             }
 
@@ -210,7 +210,4 @@ StatusCode bundle_runner_t::extract()
     {
         return e;
     }
-
-
-
 }

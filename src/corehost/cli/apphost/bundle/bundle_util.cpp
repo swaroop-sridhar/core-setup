@@ -9,12 +9,12 @@ using namespace bundle;
 
 void bundle_util_t::write(const void* buf, size_t size, FILE* stream)
 {
-	if (fwrite(buf, 1, size, stream) != size)
-	{
-		trace::error(_X("Failure extracting contents of the application bundle."));
-		trace::error(_X("I/O failure when writing extracted files."));
-		throw StatusCode::BundleExtractionIOError;
-	}
+    if (fwrite(buf, 1, size, stream) != size)
+    {
+        trace::error(_X("Failure extracting contents of the application bundle."));
+        trace::error(_X("I/O failure when writing extracted files."));
+        throw StatusCode::BundleExtractionIOError;
+    }
 }
 
 bool bundle_util_t::has_dirs_in_path(const pal::string_t& path)

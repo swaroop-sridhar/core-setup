@@ -15,17 +15,17 @@ namespace bundle
     //   - Major Version     
     //   - Minor Version     
     //   - Number of embedded files
-	// Variable size portion:
-	//   - Bundle ID length 
+    // Variable size portion:
+    //   - Bundle ID length 
     //   - Bundle ID ("Bundle ID length" bytes)
 
 #pragma pack(push, 1)
-	struct manifest_header_fixed_t
-	{
-		uint32_t major_version;
-		uint32_t minor_version;
-		int32_t num_embedded_files;
-	};
+    struct manifest_header_fixed_t
+    {
+        uint32_t major_version;
+        uint32_t minor_version;
+        int32_t num_embedded_files;
+    };
 #pragma pack(pop)
 
     struct manifest_header_t
@@ -42,7 +42,7 @@ namespace bundle
         int32_t num_embedded_files() { return m_data->num_embedded_files;  }
 
     private:
-		manifest_header_fixed_t* m_data;
+        manifest_header_fixed_t* m_data;
         pal::string_t m_bundle_id;
 
         static const uint32_t m_current_major_version = 0;
@@ -58,7 +58,7 @@ namespace bundle
         manifest_footer_t()
             :m_header_offset(0), m_signature_length(0)
         {
-			m_signature[0] = 0;
+            m_signature[0] = 0;
         }
 
         bool is_valid();

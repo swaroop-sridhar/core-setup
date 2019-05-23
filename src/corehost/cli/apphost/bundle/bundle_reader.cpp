@@ -13,7 +13,7 @@ size_t bundle_reader_t::read_path_length()
 {
     size_t length = 0;
 
-	int8_t first_byte = read();
+    int8_t first_byte = read();
     // If the high bit is set, it means there are more bytes to read.
     if ((first_byte & 0x80) == 0)
     {
@@ -21,7 +21,7 @@ size_t bundle_reader_t::read_path_length()
     }
     else
     {
-		int8_t second_byte = read();
+        int8_t second_byte = read();
 
         if (second_byte & 0x80)
         {
@@ -49,7 +49,7 @@ void bundle_reader_t::read_path_string(pal::string_t &str)
 {
     size_t length = read_path_length();
     int8_t *buffer = new int8_t[length + 1];
-	read(buffer, length);
+    read(buffer, length);
     buffer[length] = 0; // null-terminator
     pal::clr_palstring(reinterpret_cast<const char*>(buffer), &str);
 }

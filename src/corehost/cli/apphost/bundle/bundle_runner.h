@@ -17,8 +17,8 @@ namespace bundle
             : m_manifest(nullptr)
             , m_num_embedded_files(0)
             , m_bundle_path(bundle_path)
-			, m_bundle_map(nullptr)
-			, m_bundle_length(0)
+            , m_bundle_map(nullptr)
+            , m_bundle_length(0)
         {
         }
 
@@ -30,10 +30,10 @@ namespace bundle
         StatusCode extract();
 
     private:
-		void map_host();
+        void map_host();
 
-		void process_manifest_footer(bundle_reader_t &reader);
-		void process_manifest_header(bundle_reader_t &reader);
+        void process_manifest_footer(bundle_reader_t &reader);
+        void process_manifest_header(bundle_reader_t &reader);
 
         void determine_extraction_dir();
         void create_working_extraction_dir();
@@ -48,11 +48,10 @@ namespace bundle
         pal::string_t m_bundle_id;
         pal::string_t m_extraction_dir;
         pal::string_t m_working_extraction_dir;
-		int8_t* m_bundle_map;
-		size_t m_bundle_length;
+        int8_t* m_bundle_map;
+        size_t m_bundle_length;
 
     };
-
 }
 
 #endif // __BUNDLE_RUNNER_H__
