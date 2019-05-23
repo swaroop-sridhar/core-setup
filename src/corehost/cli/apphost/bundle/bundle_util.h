@@ -13,7 +13,7 @@
 
 namespace bundle
 {
-    static class bundle_util_t
+    class bundle_util_t
     {
     public:
 		static bool has_dirs_in_path(const pal::string_t &path);

@@ -12,25 +12,17 @@ namespace bundle
 {
 	struct bundle_reader_t
 	{
-		bundle_reader_t(const int8_t* ptr)
+		bundle_reader_t(const int8_t* base_ptr)
 		{
-			m_ptr = ptr;
+			m_base_ptr = base_ptr;
+			m_ptr = base_ptr;
 		}
 
 	public:
-		const int8_t* get_ptr()
-		{
-			return m_ptr;
-		}
 
-		void set_ptr(const int8_t* ptr)
+		void set_offset(int64_t offset)
 		{
-			m_ptr = ptr;
-		}
-
-		void operator +=(int64_t offset)
-		{
-			m_ptr += offset;
+			m_ptr = m_base_ptr + offset;
 		}
 
 		int8_t read()
@@ -55,7 +47,8 @@ namespace bundle
 
 	private:
 		const int8_t* m_ptr;
-    };
+		const int8_t* m_base_ptr;
+	};
 }
 
 #endif // __BUNDLE_READER_H__

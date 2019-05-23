@@ -47,7 +47,7 @@ size_t bundle_reader_t::read_path_length()
 
 void bundle_reader_t::read_path_string(pal::string_t &str)
 {
-	size_t length = read_path_length();
+    size_t length = read_path_length();
     int8_t *buffer = new int8_t[length + 1];
 	read(buffer, length);
     buffer[length] = 0; // null-terminator

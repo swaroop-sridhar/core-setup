@@ -24,7 +24,7 @@ void bundle_runner_t::map_host()
 
 void bundle_runner_t::process_manifest_footer(bundle_reader_t &reader)
 {
-	reader += m_bundle_length - sizeof(manifest_footer_t);
+	reader.set_offset(m_bundle_length - sizeof(manifest_footer_t));
 	manifest_footer_t* footer = manifest_footer_t::read(reader);
 
 	if (!footer->is_valid())
@@ -33,7 +33,7 @@ void bundle_runner_t::process_manifest_footer(bundle_reader_t &reader)
 		throw StatusCode::AppHostExeNotBundle;
 	}
 
-	reader.set_ptr(m_bundle_map + footer->manifest_header_offset());
+	reader.set_offset(footer->manifest_header_offset());
 }
 
 void bundle_runner_t::process_manifest_header(bundle_reader_t &reader)
