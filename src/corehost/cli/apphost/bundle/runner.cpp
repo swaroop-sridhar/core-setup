@@ -54,7 +54,19 @@ void runner_t::process_manifest_header(reader_t &reader)
 
 bool runner_t::read_bundled_file(const char* name, const void** buffer, size_t* size)
 {
+    for (file_entry_t* entry : s_manifest->files) 
+    {
+        pal::string_t s = name;
+        
+        if (strcmp(entry->relative_path().data(), name) == 0)
+        {
+            *buffer = s_bundle_map + entry->offset;
+            size = entry->size;
+            return true;
+        }
+    }
 
+    return false;
 }
 
 // Current support for executing single-file bundles involves 
