@@ -10,7 +10,7 @@
 
 namespace bundle
 {
-    static class runner_t
+    class runner_t
     {
     public:
         static StatusCode extract();
@@ -22,10 +22,7 @@ namespace bundle
             return s_extraction_path;
         }
 
-        static bool read_bundled_file(
-            const pal::char_t* name,
-            const void** buffer,
-            size_t* size);
+        static bool read_bundled_file(const pal::char_t* name, const void** buffer, size_t* size);
 
     private:
         static void map_host();

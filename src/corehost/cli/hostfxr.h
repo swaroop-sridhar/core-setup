@@ -8,14 +8,6 @@
 #include <pal.h>
 
 // Forward declaration of required custom feature APIs
-using hostfxr_main_fn = int32_t(*)(const int argc, const pal::char_t* argv[]);
-using hostfxr_main_startupinfo_fn = int32_t(*)(
-    const int argc,
-    const pal::char_t* argv[],
-    const pal::char_t* host_path,
-    const pal::char_t* dotnet_root,
-    const pal::char_t* app_path);
-
 enum class hostfxr_delegate_type
 {
     com_activation,
@@ -23,13 +15,15 @@ enum class hostfxr_delegate_type
     winrt_activation
 };
 
+using bundle_reader_fn = bool (*)(const pal::char_t* name, const void** buffer, size_t* size);
 using hostfxr_main_fn = int32_t(*)(const int argc, const pal::char_t* argv[]);
 using hostfxr_main_startupinfo_fn = int32_t(*)(
     const int argc,
     const pal::char_t* argv[],
     const pal::char_t* host_path,
     const pal::char_t* dotnet_root,
-    const pal::char_t* app_path);
+    const pal::char_t* app_path,
+    const bundle_reader_fn bundle_reader);
 using hostfxr_error_writer_fn = void(*)(const pal::char_t* message);
 using hostfxr_set_error_writer_fn = hostfxr_error_writer_fn(*)(hostfxr_error_writer_fn error_writer);
 

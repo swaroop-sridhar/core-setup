@@ -15,6 +15,7 @@ using corehost_unload_fn = int(*) ();
 using corehost_error_writer_fn = void(*) (const pal::char_t* message);
 using corehost_set_error_writer_fn = corehost_error_writer_fn(*) (corehost_error_writer_fn error_writer);
 using corehost_initialize_fn = int(*)(const corehost_initialize_request_t* init_request, int32_t options, corehost_context_contract* handle);
+using bundle_reader_fn = bool (*)(const char* name, const void** buffer, size_t* size);
 
 struct hostpolicy_contract_t
 {
@@ -25,6 +26,7 @@ struct hostpolicy_contract_t
     // 3.0+ contracts
     corehost_set_error_writer_fn set_error_writer;
     corehost_initialize_fn initialize;
+    bundle_reader_fn bundle_reader;
 };
 
 namespace hostpolicy_resolver
