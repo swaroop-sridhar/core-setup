@@ -23,7 +23,7 @@ namespace bundle
         }
 
         static bool read_bundled_file(
-            const char* name,
+            const pal::char_t* name,
             const void** buffer,
             size_t* size);
 

@@ -52,16 +52,14 @@ void runner_t::process_manifest_header(reader_t &reader)
     s_bundle_id = header->bundle_id();
 }
 
-bool runner_t::read_bundled_file(const char* name, const void** buffer, size_t* size)
+bool runner_t::read_bundled_file(const pal::char_t* name, const void** buffer, size_t* size)
 {
     for (file_entry_t* entry : s_manifest->files) 
     {
-        pal::string_t s = name;
-        
-        if (strcmp(entry->relative_path().data(), name) == 0)
+        if (entry->relative_path().compare(name) == 0)
         {
-            *buffer = s_bundle_map + entry->offset;
-            size = entry->size;
+            *buffer = s_bundle_map + entry->offset();
+            *size = entry->size();
             return true;
         }
     }
