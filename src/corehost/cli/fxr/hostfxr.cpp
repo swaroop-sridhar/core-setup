@@ -24,7 +24,8 @@ namespace
     }
 }
 
-SHARED_API int hostfxr_main_startupinfo(const int argc, const pal::char_t* argv[], const pal::char_t* host_path, const pal::char_t* dotnet_root, const pal::char_t* app_path)
+SHARED_API int hostfxr_main_startupinfo(const int argc, const pal::char_t* argv[], const pal::char_t* host_path, const pal::char_t* dotnet_root, const pal::char_t* app_path, 
+	bool (*bundle_reader)(const char* name, const void** buffer, size_t* size))
 {
     trace_hostfxr_entry_point(_X("hostfxr_main_startupinfo"));
 
