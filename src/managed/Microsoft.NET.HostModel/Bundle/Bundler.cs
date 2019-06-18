@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
+using System.IO.Compression;
 using System.Reflection.PortableExecutable;
 
 namespace Microsoft.NET.HostModel.Bundle
@@ -56,23 +57,33 @@ namespace Microsoft.NET.HostModel.Bundle
         /// </summary>
         /// <returns>Returns the offset of the start 'file' within 'bundle'</returns>
 
-        long AddToBundle(Stream bundle, Stream file, FileType type = FileType.Extract)
+        long AddToBundle(string bundlePath, Stream file, FileType type = FileType.Extract)
         {
-            // Allign assemblies, since they are loaded directly from bundle
-            if (type == FileType.Assembly)
+            long startOffset = 0;
+            using (FileStream bundle = File.OpenWrite(bundlePath))
             {
-                long misalignment = (bundle.Position % AssemblyAlignment);
+                bundle.Position = bundle.Length;
 
-                if (misalignment != 0)
+                // Allign assemblies, since they are loaded directly from bundle
+                if (type == FileType.Assembly)
                 {
-                    long padding = AssemblyAlignment - misalignment;
-                    bundle.Position += padding;
+                    long misalignment = (bundle.Position % AssemblyAlignment);
+
+                    if (misalignment != 0)
+                    {
+                        long padding = AssemblyAlignment - misalignment;
+                        bundle.Position += padding;
+                    }
+                }
+
+                file.Position = 0;
+                startOffset = bundle.Position;
+
+                using (GZipStream compressStream = new GZipStream(bundle, CompressionLevel.Optimal))
+                {
+                    file.CopyTo(compressStream);
                 }
             }
-
-            file.Position = 0;
-            long startOffset = bundle.Position;
-            file.CopyTo(bundle);
 
             return startOffset;
         }
@@ -169,34 +180,31 @@ namespace Microsoft.NET.HostModel.Bundle
             // Copy the file to preserve its permissions.
             File.Copy(hostSource, bundlePath, overwrite: true);
 
-            using (BinaryWriter writer = new BinaryWriter(File.OpenWrite(bundlePath)))
+            // Write the files from the specification into the bundle
+            foreach (var fileSpec in fileSpecs)
             {
-                Stream bundle = writer.BaseStream;
-                bundle.Position = bundle.Length;
-
-                // Write the files from the specification into the bundle
-                foreach (var fileSpec in fileSpecs)
+                if (!ShouldEmbed(fileSpec.BundleRelativePath))
                 {
-                    if (!ShouldEmbed(fileSpec.BundleRelativePath))
-                    {
-                        trace.Log($"Skip: {fileSpec.BundleRelativePath}");
-                        continue;
-                    }
-
-                    using (FileStream file = File.OpenRead(fileSpec.SourcePath))
-                    {
-                        FileType type = InferType(fileSpec.BundleRelativePath, file);
-                        long startOffset = AddToBundle(bundle, file, type);
-                        FileEntry entry = new FileEntry(type, fileSpec.BundleRelativePath, startOffset, file.Length);
-                        BundleManifest.Files.Add(entry);
-                        trace.Log($"Embed: {entry}");
-                    }
+                    trace.Log($"Skip: {fileSpec.BundleRelativePath}");
+                    continue;
                 }
 
+                using (FileStream file = File.OpenRead(fileSpec.SourcePath))
+                {
+                    FileType type = InferType(fileSpec.BundleRelativePath, file);
+                    long startOffset = AddToBundle(bundlePath, file, type);
+                    FileEntry entry = new FileEntry(type, fileSpec.BundleRelativePath, startOffset, file.Length);
+                    BundleManifest.Files.Add(entry);
+                    trace.Log($"Embed: {entry}");
+                }
+            }
+
+            using (BinaryWriter writer = new BinaryWriter(File.OpenWrite(bundlePath)))
+            {
                 // Write the bundle manifest
                 long manifestOffset = BundleManifest.Write(writer);
                 trace.Log($"Manifest: Offset={manifestOffset}, Size={writer.BaseStream.Position - manifestOffset}");
-                trace.Log($"Bundle: Path={bundlePath} Size={bundle.Length}");
+                trace.Log($"Bundle: Path={bundlePath}");
             }
 
             return bundlePath;
