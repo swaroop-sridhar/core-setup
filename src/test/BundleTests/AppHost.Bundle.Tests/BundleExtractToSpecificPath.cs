@@ -118,7 +118,6 @@ namespace AppHost.Bundle.Tests
             extractDir.Should().NotBeModifiedAfter(firstWriteTime);
         }
 
-
         public class SharedTestState : IDisposable
         {
             public TestProjectFixture TestFixture { get; set; }
