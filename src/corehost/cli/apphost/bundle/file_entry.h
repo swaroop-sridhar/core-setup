@@ -34,6 +34,14 @@ namespace bundle
     class file_entry_t
     {
     public:
+        file_entry_t()
+            : m_offset(0)
+            , m_size(0)
+            , m_type(bundle::file_type_t::__last)
+            , m_relative_path()
+        {
+        }
+
         file_entry_t(const file_entry_fixed_t *fixed_data)
             :m_relative_path()
         {

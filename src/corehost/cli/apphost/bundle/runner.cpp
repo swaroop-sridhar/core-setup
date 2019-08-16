@@ -4,6 +4,7 @@
 
 #include "runner.h"
 #include "extractor.h"
+#include "utils.h"
 
 using namespace bundle;
 
@@ -21,7 +22,7 @@ void runner_t::map_host()
 
 void runner_t::unmap_host()
 {
-    if (!unmap_file(m_bundle_map, m_bundle_length))
+    if (!pal::unmap_file(m_bundle_map, m_bundle_length))
     {
         trace::warning(_X("Failed to unmap bundle after extraction."));
     }
@@ -53,7 +54,7 @@ StatusCode runner_t::extract()
         m_manifest = manifest_t::read(reader, num_embedded_files());
 
         extractor.begin();
-        for (const file_entry_t &entry : m_manifest->files) {
+        for (const file_entry_t &entry : m_manifest.files) {
             extractor.extract(entry, reader);
         }
         extractor.commit();
