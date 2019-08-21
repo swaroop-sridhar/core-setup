@@ -27,13 +27,6 @@ namespace Microsoft.NET.HostModel.Bundle
         readonly Trace trace;
         public readonly Manifest BundleManifest;
 
-        /// <summary>
-        /// Align embedded assemblies such that they can be loaded 
-        /// directly from memory-mapped bundle.
-        /// TBD: Set the correct value of alignment while working on 
-        /// the runtime changes to load the embedded assemblies.
-        /// </summary>
-        const int AssemblyAlignment = 16;
 
         public static string Version => (Manifest.MajorVersion + "." + Manifest.MinorVersion);
 
@@ -57,18 +50,14 @@ namespace Microsoft.NET.HostModel.Bundle
         /// </summary>
         /// <returns>Returns the offset of the start 'file' within 'bundle'</returns>
 
-        long AddToBundle(Stream bundle, Stream file, FileType type = FileType.Extract)
+        long AddToBundle(Stream bundle, Stream file, int alignment)
         {
-            // Allign assemblies, since they are loaded directly from bundle
-            if (type == FileType.Assembly)
-            {
-                long misalignment = (bundle.Position % AssemblyAlignment);
+            long misalignment = (bundle.Position % alignment);
 
-                if (misalignment != 0)
-                {
-                    long padding = AssemblyAlignment - misalignment;
-                    bundle.Position += padding;
-                }
+            if (misalignment != 0)
+            {
+                long padding = alignment - misalignment;
+                bundle.Position += padding;
             }
 
             file.Position = 0;
@@ -116,16 +105,16 @@ namespace Microsoft.NET.HostModel.Bundle
             {
                 PEReader peReader = new PEReader(file);
                 CorHeader corHeader = peReader.PEHeaders.CorHeader;
-                if ((corHeader != null) && ((corHeader.Flags & CorFlags.ILOnly) != 0))
+                if (corHeader != null)
                 {
-                    return FileType.Assembly;
+                    return ((corHeader.Flags & CorFlags.ILOnly) != 0) ? FileType.IL : FileType.Ready2Run;
                 }
             }
             catch (BadImageFormatException)
             {
             }
 
-            return FileType.Extract;
+            return FileType.Other;
         }
 
         /// <summary>
@@ -160,7 +149,7 @@ namespace Microsoft.NET.HostModel.Bundle
                 throw new ArgumentException("Invalid input specification: Must specify the host binary");
             }
 
-            if(fileSpecs.GroupBy(file => file.BundleRelativePath).Where(g => g.Count() > 1).Any())
+            if (fileSpecs.GroupBy(file => file.BundleRelativePath).Where(g => g.Count() > 1).Any())
             {
                 throw new ArgumentException("Invalid input specification: Found multiple entries with the same BundleRelativePath");
             }
@@ -190,8 +179,8 @@ namespace Microsoft.NET.HostModel.Bundle
 
                     using (FileStream file = File.OpenRead(fileSpec.SourcePath))
                     {
-                        FileType type = InferType(fileSpec.BundleRelativePath, file);
-                        long startOffset = AddToBundle(bundle, file, type);
+                        FileType type = InferType(fileSpec.BundleRelativePath, file);						
+                        long startOffset = AddToBundle(bundle, file, (type == FileType.Ready2Run) ? 16 : 1);
                         FileEntry entry = BundleManifest.AddEntry(type, fileSpec.BundleRelativePath, startOffset, file.Length);
                         trace.Log($"Embed: {entry}");
                     }
@@ -237,7 +226,7 @@ namespace Microsoft.NET.HostModel.Bundle
             Array.Sort(sources, StringComparer.Ordinal);
 
             List<FileSpec> fileSpecs = new List<FileSpec>(sources.Length);
-            foreach(var file in sources)
+            foreach (var file in sources)
             {
                 fileSpecs.Add(new FileSpec(file, RelativePath(sourceDir, file)));
             }
