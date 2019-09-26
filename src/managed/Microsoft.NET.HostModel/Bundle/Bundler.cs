@@ -34,7 +34,7 @@ namespace Microsoft.NET.HostModel.Bundle
         /// TBD: Determine if this is the minimum required alignment 
         /// on all platforms and assembly types (and customize the padding accordingly).
         /// </summary>
-        public const int AssemblyAlignment = 4096;
+        public const int AssemblyAlignment = 65536;
 
         public static string Version => (Manifest.MajorVersion + "." + Manifest.MinorVersion);
 
