@@ -12,10 +12,13 @@ namespace Microsoft.NET.HostModel.AppHost
     public enum MachOFormatError
     {
         Not64BitExe,            // Apphost is expected to be a 64-bit MachO executable
-        DuplicateLinkEdit,      // Only one __LINKEDIT segment is expected in the apphost
+        MissingTextSegment,     // __TEXT Segment is missing!
+        MissingTextSection,     // __text section is missing within the __TEXT segment!
+        MissingLinkEditSegment, // CODE_SIGNATURE command must follow a Segment64 command named __LINKEDIT
+        MissingSymtab,          // CODE_SIGNATURE command must follow the SYMTAB command
+        DuplicateSegment,       // Each segment must be uniquely named
+        DuplicateSection,       // Each section must be uniquely named
         DuplicateSymtab,        // Only one SYMTAB is expected in the apphost
-        SignNeedsLinkEdit,      // CODE_SIGNATURE command must follow a Segment64 command named __LINKEDIT
-        SignNeedsSymtab,        // CODE_SIGNATURE command must follow the SYMTAB command
         LinkEditNotLast,        // __LINKEDIT must be the last segment in the binary layout
         SymtabNotInLinkEdit,    // SYMTAB must within the __LINKEDIT segment!
         SignNotInLinkEdit,      // Signature blob must be within the __LINKEDIT segment!
@@ -23,7 +26,11 @@ namespace Microsoft.NET.HostModel.AppHost
         SignBlobNotLast,        // Signature blob must be at the very end of the file
         SignDoesntFollowSymtab, // Signature blob must immediately follow the Symtab
         MemoryMapAccessFault,   // Error reading the memory-mapped apphost
-        InvalidUTF8             // UTF8 decoding failed 
+        InvalidUTF8,            // UTF8 decoding failed 
+        SignNotRemoved,         // Signature not removed from the host (while processing a single-file bundle)  
+        TextSegmentNotAtStart,  // __TEXT segment is expected to start at offset 0
+        TextSectNotInTextSeg,   // __text section not within __TEXT segment!
+        NoSpaceForMoreCommands  // Beginning of __text section leaves no space for adding a new load command
     }
 
     /// <summary>
